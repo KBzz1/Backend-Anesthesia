@@ -11,19 +11,21 @@
         <result property="name" column="name" />
         <result property="gender" column="gender" />
         <result property="age" column="age" />
-        <result property="isSoldier" column="Is_soldier" />
-        <result property="isEmergency" column="Is_emergency" />
+        <result property="isSoldier" column="is_soldier" />
+         <result property="idCardNumber" column="id_card_number" />
+        <result property="isEmergency" column="is_emergency" />
         <!-- 其他字段不需要映射 -->
     </resultMap>
 
     <!-- 对应接口的方法 findById -->
     <select id="findById" resultMap="PartialPatientResultMap">
-        SELECT p.patient_id,
-               p.name,
-               p.gender,
-               p.age,
-               t."Is_emergency",
-               p.is_soldier
+                SELECT p.patient_id,
+                             p.name,
+                             p.gender,
+                             p.age,
+                         p.id_card_number,
+                             t.is_emergency AS is_emergency,
+                             p.is_soldier AS is_soldier
         FROM treatment_information t
                  JOIN patient p ON t.patient_id = p.patient_id
         WHERE t.treatment_information_id = #{id}
@@ -34,8 +36,8 @@
         <selectKey keyProperty="patientId" resultType="int" order="BEFORE">
             SELECT nextval(pg_get_serial_sequence('patient', 'patient_id'))
         </selectKey>
-        INSERT INTO patient (patient_id, name, gender, age, is_soldier)
-        VALUES (#{patientId}, #{name}, #{gender}, #{age}, #{isSoldier});
+        INSERT INTO patient (patient_id, name, gender, age, is_soldier, id_card_number)
+        VALUES (#{patientId}, #{name}, #{gender}, #{age}, #{isSoldier}, #{idCardNumber});
     </insert>
 
 

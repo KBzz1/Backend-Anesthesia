@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# MQTTX 本地数据目录（本机使用，不需要提交到 Git）
+mqttx_a91889d2-tcp471091962101883/

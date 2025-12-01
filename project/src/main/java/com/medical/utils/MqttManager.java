@@ -11,7 +11,7 @@ import jakarta.annotation.PreDestroy;
 import java.nio.charset.StandardCharsets;
 
 // MQTT 发布组件（长连接）
-@Component
+// @Component
 public class MqttManager {
 
     private IMqttClient client;

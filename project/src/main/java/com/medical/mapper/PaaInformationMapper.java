@@ -8,6 +8,6 @@ public interface PaaInformationMapper {
 
     int insert(PaaInformation paaInformation);
 
-    PaaInformation getByTreatmentInformationId(Long treatmentInformationId);
+    PaaInformation getBySurgeryId(Long surgeryId);
 
 }

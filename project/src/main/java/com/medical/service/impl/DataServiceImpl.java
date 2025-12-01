@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class DataServiceImpl implements DataService {
 
-    @Autowired
-    private MqttManager mqttPublisher;
+//    @Autowired
+//    private MqttManager mqttPublisher;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -26,7 +26,7 @@ public class DataServiceImpl implements DataService {
             String json = objectMapper.writeValueAsString(data);
             // 发布到 MQTT
             String topic = String.format("device/%s", deviceId);
-            mqttPublisher.publish(topic, json);
+//            mqttPublisher.publish(topic, json);
             // 可扩展：保存数据库或异步分析
             System.out.println("发布成功 -> " + topic + " : " + json);
         } catch (Exception e) {

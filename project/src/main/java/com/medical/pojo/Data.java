@@ -18,5 +18,6 @@ public class Data {
     private float respWave;
     // 设备端采集时间（客户端传递时间戳）
     private long timestamp = Instant.now().toEpochMilli();
+    private float bp;
 }
 

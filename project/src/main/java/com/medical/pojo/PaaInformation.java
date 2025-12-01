@@ -6,10 +6,11 @@ import java.sql.Timestamp;
 public class PaaInformation {
 
     private Long paaId;
-    private Long treatmentInformationId;
+    private Long surgeryId;
 
     private BigDecimal height;
     private BigDecimal weight;
+    private String idCardNumber;
 
     private Boolean hisIsHypertension;
     private Boolean hisIsChronicBronchitis;
@@ -35,8 +36,7 @@ public class PaaInformation {
     private String anesthesiaSpecialConditionsHis;
 
     private String peVitalSignsStatus;
-    private Short peBpSystolic;
-    private Short peBpDiastolic;
+    private String bloodpresure;
     private Short pePulseRate;
     private Short peSpo2;
     private Boolean peIsHypertension;
@@ -62,6 +62,7 @@ public class PaaInformation {
     private Boolean peIsMallampatiGe3;
     private Boolean peIsDentitionAbnormal;
     private Boolean peIsLimitedNeckMobility;
+    private Boolean peIsAirwayNormal;
     private Boolean peIsPunctureSiteNormal;
     private Boolean peIsPunctureSiteInfected;
     private Boolean peIsPunctureSiteUlcerated;
@@ -70,17 +71,15 @@ public class PaaInformation {
     private String labBloodRoutineStatus;
     private String labEcgStatus;
     private String labChestXrayStatus;
-    private String labLiverFunctionStatus;
-    private String labKidneyFunctionStatus;
-    private String labLungFunctionStatus;
-    private String labThyroidFunctionStatus;
-    private String labCoagulationStatus;
-    private String labElectrolyteStatus;
-    private String labBloodGlucoseStatus;
-    private String labCrossmatchStatus;
     private String labBloodGasStatus;
     private String labDynamicEcgStatus;
     private String labCardiacUltrasoundStatus;
+    private String labLungFunctionStatus;
+    private String labCoagulationStatus;
+    private String labElectrolyteStatus;
+    private String labHepaticRenalFunction;
+    private String labElse;
+    private String labCoronaryAngiography;
     private String labAbnormalDescription;
 
     private String asaClass;
@@ -93,12 +92,9 @@ public class PaaInformation {
     private Timestamp updatedAt;
 
     private String chiefComplaint;
-    private Boolean isPostoperativeAnalgesia;
-    private String analgesiaMethod;
     private String specialRiskNotice;
     private String agentRelationship;
     private String asaClassSuggestion;
-    private String anesthesiaPlanSuggestion;
 
     public Long getPaaId() {
         return paaId;
@@ -108,12 +104,12 @@ public class PaaInformation {
         this.paaId = paaId;
     }
 
-    public Long getTreatmentInformationId() {
-        return treatmentInformationId;
+    public Long getSurgeryId() {
+        return surgeryId;
     }
 
-    public void setTreatmentInformationId(Long treatmentInformationId) {
-        this.treatmentInformationId = treatmentInformationId;
+    public void setSurgeryId(Long surgeryId) {
+        this.surgeryId = surgeryId;
     }
 
     public BigDecimal getHeight() {
@@ -130,6 +126,14 @@ public class PaaInformation {
 
     public void setWeight(BigDecimal weight) {
         this.weight = weight;
+    }
+
+    public String getIdCardNumber() {
+        return idCardNumber;
+    }
+
+    public void setIdCardNumber(String idCardNumber) {
+        this.idCardNumber = idCardNumber;
     }
 
     public Boolean getHisIsHypertension() {
@@ -300,20 +304,20 @@ public class PaaInformation {
         this.peVitalSignsStatus = peVitalSignsStatus;
     }
 
-    public Short getPeBpSystolic() {
-        return peBpSystolic;
+    public Boolean getPeIsAirwayNormal() {
+        return peIsAirwayNormal;
     }
 
-    public void setPeBpSystolic(Short peBpSystolic) {
-        this.peBpSystolic = peBpSystolic;
+    public void setPeIsAirwayNormal(Boolean peIsAirwayNormal) {
+        this.peIsAirwayNormal = peIsAirwayNormal;
     }
 
-    public Short getPeBpDiastolic() {
-        return peBpDiastolic;
+    public String getBloodpresure() {
+        return bloodpresure;
     }
 
-    public void setPeBpDiastolic(Short peBpDiastolic) {
-        this.peBpDiastolic = peBpDiastolic;
+    public void setBloodpresure(String bloodpresure) {
+        this.bloodpresure = bloodpresure;
     }
 
     public Short getPePulseRate() {
@@ -564,70 +568,6 @@ public class PaaInformation {
         this.labChestXrayStatus = labChestXrayStatus;
     }
 
-    public String getLabLiverFunctionStatus() {
-        return labLiverFunctionStatus;
-    }
-
-    public void setLabLiverFunctionStatus(String labLiverFunctionStatus) {
-        this.labLiverFunctionStatus = labLiverFunctionStatus;
-    }
-
-    public String getLabKidneyFunctionStatus() {
-        return labKidneyFunctionStatus;
-    }
-
-    public void setLabKidneyFunctionStatus(String labKidneyFunctionStatus) {
-        this.labKidneyFunctionStatus = labKidneyFunctionStatus;
-    }
-
-    public String getLabLungFunctionStatus() {
-        return labLungFunctionStatus;
-    }
-
-    public void setLabLungFunctionStatus(String labLungFunctionStatus) {
-        this.labLungFunctionStatus = labLungFunctionStatus;
-    }
-
-    public String getLabThyroidFunctionStatus() {
-        return labThyroidFunctionStatus;
-    }
-
-    public void setLabThyroidFunctionStatus(String labThyroidFunctionStatus) {
-        this.labThyroidFunctionStatus = labThyroidFunctionStatus;
-    }
-
-    public String getLabCoagulationStatus() {
-        return labCoagulationStatus;
-    }
-
-    public void setLabCoagulationStatus(String labCoagulationStatus) {
-        this.labCoagulationStatus = labCoagulationStatus;
-    }
-
-    public String getLabElectrolyteStatus() {
-        return labElectrolyteStatus;
-    }
-
-    public void setLabElectrolyteStatus(String labElectrolyteStatus) {
-        this.labElectrolyteStatus = labElectrolyteStatus;
-    }
-
-    public String getLabBloodGlucoseStatus() {
-        return labBloodGlucoseStatus;
-    }
-
-    public void setLabBloodGlucoseStatus(String labBloodGlucoseStatus) {
-        this.labBloodGlucoseStatus = labBloodGlucoseStatus;
-    }
-
-    public String getLabCrossmatchStatus() {
-        return labCrossmatchStatus;
-    }
-
-    public void setLabCrossmatchStatus(String labCrossmatchStatus) {
-        this.labCrossmatchStatus = labCrossmatchStatus;
-    }
-
     public String getLabBloodGasStatus() {
         return labBloodGasStatus;
     }
@@ -652,12 +592,60 @@ public class PaaInformation {
         this.labCardiacUltrasoundStatus = labCardiacUltrasoundStatus;
     }
 
+    public String getLabLungFunctionStatus() {
+        return labLungFunctionStatus;
+    }
+
+    public void setLabLungFunctionStatus(String labLungFunctionStatus) {
+        this.labLungFunctionStatus = labLungFunctionStatus;
+    }
+
+    public String getLabCoagulationStatus() {
+        return labCoagulationStatus;
+    }
+
+    public void setLabCoagulationStatus(String labCoagulationStatus) {
+        this.labCoagulationStatus = labCoagulationStatus;
+    }
+
+    public String getLabElectrolyteStatus() {
+        return labElectrolyteStatus;
+    }
+
+    public void setLabElectrolyteStatus(String labElectrolyteStatus) {
+        this.labElectrolyteStatus = labElectrolyteStatus;
+    }
+
+    public String getLabHepaticRenalFunction() {
+        return labHepaticRenalFunction;
+    }
+
+    public void setLabHepaticRenalFunction(String labHepaticRenalFunction) {
+        this.labHepaticRenalFunction = labHepaticRenalFunction;
+    }
+
+    public String getLabElse() {
+        return labElse;
+    }
+
+    public void setLabElse(String labElse) {
+        this.labElse = labElse;
+    }
+
     public String getLabAbnormalDescription() {
         return labAbnormalDescription;
     }
 
     public void setLabAbnormalDescription(String labAbnormalDescription) {
         this.labAbnormalDescription = labAbnormalDescription;
+    }
+
+    public String getLabCoronaryAngiography() {
+        return labCoronaryAngiography;
+    }
+
+    public void setLabCoronaryAngiography(String labCoronaryAngiography) {
+        this.labCoronaryAngiography = labCoronaryAngiography;
     }
 
     public String getAsaClass() {
@@ -724,22 +712,6 @@ public class PaaInformation {
         this.chiefComplaint = chiefComplaint;
     }
 
-    public Boolean getPostoperativeAnalgesia() {
-        return isPostoperativeAnalgesia;
-    }
-
-    public void setPostoperativeAnalgesia(Boolean postoperativeAnalgesia) {
-        isPostoperativeAnalgesia = postoperativeAnalgesia;
-    }
-
-    public String getAnalgesiaMethod() {
-        return analgesiaMethod;
-    }
-
-    public void setAnalgesiaMethod(String analgesiaMethod) {
-        this.analgesiaMethod = analgesiaMethod;
-    }
-
     public String getSpecialRiskNotice() {
         return specialRiskNotice;
     }
@@ -762,13 +734,5 @@ public class PaaInformation {
 
     public void setAsaClassSuggestion(String asaClassSuggestion) {
         this.asaClassSuggestion = asaClassSuggestion;
-    }
-
-    public String getAnesthesiaPlanSuggestion() {
-        return anesthesiaPlanSuggestion;
-    }
-
-    public void setAnesthesiaPlanSuggestion(String anesthesiaPlanSuggestion) {
-        this.anesthesiaPlanSuggestion = anesthesiaPlanSuggestion;
     }
 }

@@ -7,9 +7,10 @@
 
     <resultMap id="PaaInformationResultMap" type="com.medical.pojo.PaaInformation">
         <id property="paaId" column="paa_id"/>
-        <result property="treatmentInformationId" column="treatment_information_id"/>
+            <result property="surgeryId" column="treatment_information_id"/>
         <result property="height" column="height"/>
         <result property="weight" column="weight"/>
+        <result property="idCardNumber" column="id_card_number"/>
         <result property="hisIsHypertension" column="his_is_hypertension"/>
         <result property="hisIsChronicBronchitis" column="his_is_chronic_bronchitis"/>
         <result property="hisIsOsas" column="his_is_osas"/>
@@ -34,8 +35,7 @@
         <result property="anesthesiaSpecialConditionsHis" column="anesthesia_special_conditions_his"/>
 
         <result property="peVitalSignsStatus" column="pe_vital_signs_status"/>
-        <result property="peBpSystolic" column="pe_bp_systolic"/>
-        <result property="peBpDiastolic" column="pe_bp_diastolic"/>
+        <result property="bloodpresure" column="pe_bp"/>
         <result property="pePulseRate" column="pe_pulse_rate"/>
         <result property="peSpo2" column="pe_spo2"/>
         <result property="peIsHypertension" column="pe_is_hypertension"/>
@@ -61,6 +61,7 @@
         <result property="peIsMallampatiGe3" column="pe_is_mallampati_ge_3"/>
         <result property="peIsDentitionAbnormal" column="pe_is_dentition_abnormal"/>
         <result property="peIsLimitedNeckMobility" column="pe_is_limited_neck_mobility"/>
+        <result property="peIsAirwayNormal" column="pe_is_airway_normal"/>
         <result property="peIsPunctureSiteNormal" column="pe_is_puncture_site_normal"/>
         <result property="peIsPunctureSiteInfected" column="pe_is_puncture_site_infected"/>
         <result property="peIsPunctureSiteUlcerated" column="pe_is_puncture_site_ulcerated"/>
@@ -69,18 +70,16 @@
         <result property="labBloodRoutineStatus" column="lab_blood_routine_status"/>
         <result property="labEcgStatus" column="lab_ecg_status"/>
         <result property="labChestXrayStatus" column="lab_chest_xray_status"/>
-        <result property="labLiverFunctionStatus" column="lab_liver_function_status"/>
-        <result property="labKidneyFunctionStatus" column="lab_kidney_function_status"/>
-        <result property="labLungFunctionStatus" column="lab_lung_function_status"/>
-        <result property="labThyroidFunctionStatus" column="lab_thyroid_function_status"/>
-        <result property="labCoagulationStatus" column="lab_coagulation_status"/>
-        <result property="labElectrolyteStatus" column="lab_electrolyte_status"/>
-        <result property="labBloodGlucoseStatus" column="lab_blood_glucose_status"/>
-        <result property="labCrossmatchStatus" column="lab_crossmatch_status"/>
         <result property="labBloodGasStatus" column="lab_blood_gas_status"/>
         <result property="labDynamicEcgStatus" column="lab_dynamic_ecg_status"/>
         <result property="labCardiacUltrasoundStatus" column="lab_cardiac_ultrasound_status"/>
+        <result property="labLungFunctionStatus" column="lab_lung_function_status"/>
+        <result property="labCoagulationStatus" column="lab_coagulation_status"/>
+        <result property="labElectrolyteStatus" column="lab_electrolyte_status"/>
+        <result property="labHepaticRenalFunction" column="lab_hepatic_renal_function"/>
+        <result property="labElse" column="lab_else"/>
         <result property="labAbnormalDescription" column="lab_abnormal_description"/>
+        <result property="labCoronaryAngiography" column="lab_coronary_angiography"/>
 
         <result property="asaClass" column="asa_class"/>
         <result property="cardiacFunctionClass" column="cardiac_function_class"/>
@@ -92,18 +91,15 @@
         <result property="updatedAt" column="updated_at"/>
 
         <result property="chiefComplaint" column="chief_complaint"/>
-        <result property="postoperativeAnalgesia" column="is_postoperative_analgesia"/>
-        <result property="analgesiaMethod" column="analgesia_method"/>
         <result property="specialRiskNotice" column="special_risk_notice"/>
         <result property="agentRelationship" column="agent_relationship"/>
         <result property="asaClassSuggestion" column="asa_class_suggestion"/>
-        <result property="anesthesiaPlanSuggestion" column="anesthesia_plan_suggestion"/>
     </resultMap>
 
-    <select id="getByTreatmentInformationId" parameterType="long" resultMap="PaaInformationResultMap">
+    <select id="getBySurgeryId" parameterType="long" resultMap="PaaInformationResultMap">
         SELECT *
-        FROM paa_information
-        WHERE treatment_information_id = #{treatmentInformationId}
+            FROM paa_information
+            WHERE treatment_information_id = #{surgeryId}
         LIMIT 1
     </select>
 
@@ -133,8 +129,7 @@
             anesthesia_type_and_adverse_reaction_his,
             anesthesia_special_conditions_his,
             pe_vital_signs_status,
-            pe_bp_systolic,
-            pe_bp_diastolic,
+            pe_bp,
             pe_pulse_rate,
             pe_spo2,
             pe_is_hypertension,
@@ -164,34 +159,29 @@
             pe_is_puncture_site_ulcerated,
             pe_is_spinal_malformation,
             lab_blood_routine_status,
-            lab_ecg_status,
-            lab_chest_xray_status,
-            lab_liver_function_status,
-            lab_kidney_function_status,
-            lab_lung_function_status,
-            lab_thyroid_function_status,
-            lab_coagulation_status,
-            lab_electrolyte_status,
-            lab_blood_glucose_status,
-            lab_crossmatch_status,
             lab_blood_gas_status,
             lab_dynamic_ecg_status,
             lab_cardiac_ultrasound_status,
+            lab_ecg_status,
+            lab_chest_xray_status,
+            lab_lung_function_status,
+            lab_coagulation_status,
+            lab_electrolyte_status,
+            lab_hepatic_renal_function,
+            lab_else,
             lab_abnormal_description,
+            lab_coronary_angiography,
             asa_class,
             cardiac_function_class,
             airway_difficulty,
             anesthesia_risk_level,
             further_diagnosis_plan,
             chief_complaint,
-            is_postoperative_analgesia,
-            analgesia_method,
             special_risk_notice,
             agent_relationship,
-            asa_class_suggestion,
-            anesthesia_plan_suggestion
+            asa_class_suggestion
         ) VALUES (
-            #{treatmentInformationId},
+            #{surgeryId},
             #{height},
             #{weight},
             #{hisIsHypertension},
@@ -215,8 +205,7 @@
             #{anesthesiaTypeAndAdverseReactionHis},
             #{anesthesiaSpecialConditionsHis},
             #{peVitalSignsStatus},
-            #{peBpSystolic},
-            #{peBpDiastolic},
+            #{bloodpresure},
             #{pePulseRate},
             #{peSpo2},
             #{peIsHypertension},
@@ -246,32 +235,27 @@
             #{peIsPunctureSiteUlcerated},
             #{peIsSpinalMalformation},
             #{labBloodRoutineStatus},
-            #{labEcgStatus},
-            #{labChestXrayStatus},
-            #{labLiverFunctionStatus},
-            #{labKidneyFunctionStatus},
-            #{labLungFunctionStatus},
-            #{labThyroidFunctionStatus},
-            #{labCoagulationStatus},
-            #{labElectrolyteStatus},
-            #{labBloodGlucoseStatus},
-            #{labCrossmatchStatus},
             #{labBloodGasStatus},
             #{labDynamicEcgStatus},
             #{labCardiacUltrasoundStatus},
+            #{labEcgStatus},
+            #{labChestXrayStatus},
+            #{labLungFunctionStatus},
+            #{labCoagulationStatus},
+            #{labElectrolyteStatus},
+            #{labHepaticRenalFunction},
+            #{labElse},
             #{labAbnormalDescription},
+            #{labCoronaryAngiography},
             #{asaClass},
             #{cardiacFunctionClass},
             #{airwayDifficulty},
             #{anesthesiaRiskLevel},
             #{furtherDiagnosisPlan},
             #{chiefComplaint},
-            #{postoperativeAnalgesia},
-            #{analgesiaMethod},
             #{specialRiskNotice},
             #{agentRelationship},
-            #{asaClassSuggestion},
-            #{anesthesiaPlanSuggestion}
+            #{asaClassSuggestion}
         )
     </insert>
 
