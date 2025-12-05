@@ -71,7 +71,7 @@ public class StompDataConsumer {
     private WebSocketStompClient stompClient;
     private StompSession session;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final Map<String, BindingInfo> bindingCache = new ConcurrentHashMap<>();
+    private final Map<String, CachedBindingInfo> bindingCache = new ConcurrentHashMap<>();
     // Cache for devices with no binding: DeviceID -> LastCheckTimestamp
     private final Map<String, Long> noBindingCache = new ConcurrentHashMap<>();
     
@@ -277,9 +277,9 @@ public class StompDataConsumer {
     }
 
     private BindingInfo getBindingInfo(String deviceId) {
-        BindingInfo info = bindingCache.get(deviceId);
-        if (info != null) {
-            return info;
+        CachedBindingInfo cached = bindingCache.get(deviceId);
+        if (cached != null && System.currentTimeMillis() - cached.timestamp < 5000) {
+            return cached.info;
         }
 
         // Check if we recently checked and found no binding (cache for 5 seconds)
@@ -288,9 +288,9 @@ public class StompDataConsumer {
             return null;
         }
 
-        info = deviceBindingService.getBindingInfo(deviceId);
+        BindingInfo info = deviceBindingService.getBindingInfo(deviceId);
         if (info != null) {
-            bindingCache.put(deviceId, info);
+            bindingCache.put(deviceId, new CachedBindingInfo(info, System.currentTimeMillis()));
             noBindingCache.remove(deviceId);
         } else {
             noBindingCache.put(deviceId, System.currentTimeMillis());
@@ -397,6 +397,16 @@ public class StompDataConsumer {
 
         public LastRecord(float value, long timestamp) {
             this.value = value;
+            this.timestamp = timestamp;
+        }
+    }
+
+    private static class CachedBindingInfo {
+        BindingInfo info;
+        long timestamp;
+
+        public CachedBindingInfo(BindingInfo info, long timestamp) {
+            this.info = info;
             this.timestamp = timestamp;
         }
     }

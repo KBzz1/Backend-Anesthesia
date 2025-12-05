@@ -145,7 +145,7 @@
             t.treatment_information_id AS surgeryId
         FROM treatment_information t
         JOIN patient p ON p.patient_id = t.patient_id
-        WHERE DATE(t.recovery_end_time) = #{date}
+        WHERE DATE(t.surgery_start_time) = #{date}
     </select>
 
 </mapper>
