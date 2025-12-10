@@ -1,9 +1,7 @@
 package com.medical.service;
 
 import com.medical.pojo.Recovery;
-import org.springframework.stereotype.Service;
 
-@Service
 public interface RecoveryService {
 
     /** 入室记录：recovery_room_record */

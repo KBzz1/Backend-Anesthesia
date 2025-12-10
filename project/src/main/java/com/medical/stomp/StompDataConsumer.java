@@ -56,7 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class StompDataConsumer {
 
-    @Value("${stomp.server.url:ws://10.242.98.103:8080/ws}")
+    @Value("${stomp.server.url:ws://10.242.20.251:8080/ws}")
     private String serverUrl;
 
     @Value("${stomp.topic:/data/sub/34:81:F4:75:20:70}")

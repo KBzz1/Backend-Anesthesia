@@ -17,7 +17,7 @@ public class DeviceBindingServiceImpl implements DeviceBindingService {
     @Autowired
     private RestTemplate restTemplate;
 
-    @Value("${device.binding.url:http://10.242.98.103:8080/device/binding/device/}")
+    @Value("${device.binding.url:http://10.242.20.251:8080/device/binding/device/}")
     private String bindingUrl;
 
     private final ObjectMapper objectMapper = new ObjectMapper();

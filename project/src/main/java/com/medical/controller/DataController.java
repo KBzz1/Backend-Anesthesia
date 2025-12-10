@@ -1,11 +1,15 @@
 package com.medical.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.medical.pojo.Data;
 import com.medical.pojo.Result;
 import com.medical.service.DataService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 // 监测数据管理
 @RestController
@@ -25,11 +29,4 @@ public class DataController {
 
         return Result.success();
     }
-
-    @GetMapping("/{deviceId}/subscribe")
-    public Result subscribe(@PathVariable String deviceId) {
-//        return dataService.subscribe(deviceId);
-        return null;
-    }
-
 }

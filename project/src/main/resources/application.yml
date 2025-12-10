@@ -1,30 +1,25 @@
 server:
   port: 8080
-spring:
- application:
-  name: project
 
- datasource:
-  driver-class-name: org.postgresql.Driver
-  url: jdbc:postgresql://10.242.90.240:5432/anesthesia
-  username: postgres
-  password: medical310
+spring:
+  application:
+    name: project
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://10.242.90.240:5432/anesthesia
+    username: postgres
+    password: medical310
 
 stomp:
   server:
-    url: ws://10.242.98.103:8080/ws
+    url: ws://10.242.20.251:8080/ws
   topic: /data/sub/34:81:F4:75:20:70
 
-
 mybatis:
-  # Mapper XML 文件路径（resources目录下的mapper文件夹）
   mapper-locations: classpath:mapper/*.xml
-  # 实体类所在包（用于别名简化，比如 Patient 就能直接写成 <resultMap type="Patient">）
-  type-aliases-package: com.example.entity
+  type-aliases-package: com.medical.pojo
   configuration:
-    # 开启数据库下划线命名自动匹配 Java 驼峰命名（birth_year -> birthYear）
     map-underscore-to-camel-case: true
-    # SQL调试日志打印到控制台
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 
