@@ -11,7 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.medical.mapper.ARSMapper;
+import com.medical.mapper.DrugPushLogMapper;
 import com.medical.pojo.DTO.AnesthesiaRecordSummaryDTO;
+import com.medical.pojo.DTO.DrugRecordItemDTO;
 import com.medical.pojo.DTO.PatientSummaryDTO;
 import com.medical.pojo.SurgeryStep;
 import com.medical.service.ARSService;
@@ -24,6 +26,9 @@ public class ARSServiceImpl implements ARSService {
     @Autowired
     private ARSMapper arsMapper;
 
+    @Autowired
+    private DrugPushLogMapper drugPushLogMapper;
+
     @Override
     public List<PatientSummaryDTO> getPatientsToday() {
         return arsMapper.findPatientsByDate(LocalDate.now());
@@ -33,6 +38,11 @@ public class ARSServiceImpl implements ARSService {
     public AnesthesiaRecordSummaryDTO getByTreatmentId(Long treatmentId) {
         AnesthesiaRecordSummaryDTO dto = arsMapper.findByTreatmentId(treatmentId);
         if (dto != null) {
+            List<DrugRecordItemDTO> drugRecords = drugPushLogMapper.selectByTreatmentInformationId(treatmentId);
+            if (drugRecords != null && !drugRecords.isEmpty()) {
+                dto.setDrugRecord(drugRecords);
+            }
+
             // 填充麻醉医师信息
             Long anesthesiologistId = arsMapper.findAnesthesiologistIdByTreatmentId(treatmentId);
             if (anesthesiologistId != null) {

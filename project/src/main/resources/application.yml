@@ -22,4 +22,15 @@ mybatis:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
+auth:
+  enabled: false # set true to enforce token check
+  shared-secret: "" # set to your token value (for simple shared-secret validation)
+  header: Authorization
+  bearer-prefix: "Bearer "
+  ignore-paths: /error,/actuator/**
+
+jwt:
+  secret: Gvq3qwTLtylD/thEZikRdVUU2c5dv1GW+ZpC3BJDwOLU+8f22qPhFA5YXnRalpMz92HD3YiCCFjhyLM0mYGn8A==
+  expiration: 18000000
+
 

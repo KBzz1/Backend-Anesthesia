@@ -55,6 +55,9 @@ public class AnesthesiaRecordSummaryDTO {
     // 手术步骤记录
     private java.util.List<SurgeryRecordItem> surgeryRecord;
 
+    // 用药推注记录
+    private java.util.List<DrugRecordItemDTO> drugRecord;
+
     @Data
     public static class SurgeryRecordItem {
         private String eventName;
