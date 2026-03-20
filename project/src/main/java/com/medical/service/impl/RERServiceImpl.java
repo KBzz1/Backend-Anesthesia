@@ -55,9 +55,13 @@
             if (intra != null) {
                 for (IntraoperativeEvent e : intra) {
                     String name = e.getEventName();
-                    Integer eh = e.getEventHour();
-                    Integer em = e.getEventMinute();
-                    rerMapper.insertIntraoperativeEvent(treatmentId, name, eh, em);
+                    Integer[] resolved = resolveEventHourMinute(e.getEventHour(), e.getEventMinute());
+                    rerMapper.insertIntraoperativeEvent(
+                        treatmentId,
+                        name,
+                        resolved[0],
+                        resolved[1]
+                    );
                 }
             }
 
@@ -65,16 +69,23 @@
             if (comp != null) {
                 for (ComplicationEvent c : comp) {
                     String name = c.getEventName();
-                    Integer eh = c.getEventHour();
-                    Integer em = c.getEventMinute();
-                    if (eh == null || em == null) {
-                        LocalDateTime now = LocalDateTime.now();
-                        eh = now.getHour();
-                        em = now.getMinute();
-                    }
-                    rerMapper.insertComplicationEvent(treatmentId, name, eh, em);
+                    Integer[] resolved = resolveEventHourMinute(c.getEventHour(), c.getEventMinute());
+                    rerMapper.insertComplicationEvent(
+                        treatmentId,
+                        name,
+                        resolved[0],
+                        resolved[1]
+                    );
                 }
             }
+        }
+
+        private Integer[] resolveEventHourMinute(Integer eventHour, Integer eventMinute) {
+            if (eventHour != null && eventMinute != null) {
+                return new Integer[]{eventHour, eventMinute};
+            }
+            LocalDateTime now = LocalDateTime.now();
+            return new Integer[]{now.getHour(), now.getMinute()};
         }
 
     }

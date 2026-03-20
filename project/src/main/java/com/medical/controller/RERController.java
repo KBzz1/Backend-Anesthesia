@@ -1,9 +1,9 @@
 package com.medical.controller;
 
+import com.medical.pojo.Result;
 import com.medical.pojo.DTO.RecoveryEventRecord;
 import com.medical.service.RERService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,8 +14,8 @@ public class RERController {
     private RERService rerService;
 
     @PostMapping
-    public ResponseEntity<String> saveRER(@RequestBody RecoveryEventRecord record) {
+    public Result saveRER(@RequestBody RecoveryEventRecord record) {
         rerService.saveRER(record);
-        return ResponseEntity.ok("success");
+        return Result.success();
     }
 }

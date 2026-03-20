@@ -3,17 +3,21 @@
 <mapper namespace="com.medical.mapper.RERMapper">
 
     <select id="selectIntraoperativeEvents" resultType="com.medical.pojo.DTO.RecoveryEventRecord$IntraoperativeEvent">
-        SELECT event_name AS eventName, event_hour AS eventHour, event_min AS eventMinute
+        SELECT event_name AS eventName,
+               COALESCE(event_hour, event_time / 60) AS eventHour,
+               COALESCE(event_min, event_time % 60) AS eventMinute
         FROM recovery_intraoperative_event
         WHERE treatment_information_id = #{treatmentInformationId}
-        ORDER BY event_hour, event_min
+        ORDER BY COALESCE(event_hour, event_time / 60), COALESCE(event_min, event_time % 60)
     </select>
 
     <select id="selectComplicationEvents" resultType="com.medical.pojo.DTO.RecoveryEventRecord$ComplicationEvent">
-        SELECT event_name AS eventName, event_hour AS eventHour, event_min AS eventMinute
+        SELECT event_name AS eventName,
+               COALESCE(event_hour, event_time / 60) AS eventHour,
+               COALESCE(event_min, event_time % 60) AS eventMinute
         FROM recovery_complication_event
         WHERE treatment_information_id = #{treatmentInformationId}
-        ORDER BY event_hour, event_min
+        ORDER BY COALESCE(event_hour, event_time / 60), COALESCE(event_min, event_time % 60)
     </select>
 
     <select id="selectMonitoringEvent" resultType="com.medical.pojo.DTO.RecoveryEventRecord$MonitoringEvent">

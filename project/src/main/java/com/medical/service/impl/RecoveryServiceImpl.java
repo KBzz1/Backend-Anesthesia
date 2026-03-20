@@ -23,6 +23,9 @@ public class RecoveryServiceImpl implements RecoveryService {
     public Recovery saveAssessment(Recovery recovery) {
         // 出室评估：插入 recovery_area_room_assessment 表
         recoveryMapper.insertAssessment(recovery);
+        if (recovery != null && recovery.getTreatmentInformationId() != null) {
+            recoveryMapper.updateRecoveryEndTime(recovery.getTreatmentInformationId());
+        }
         return recovery;
     }
 }

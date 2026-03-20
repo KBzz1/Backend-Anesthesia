@@ -122,4 +122,10 @@
             #{pupilEqual}
         )
     </insert>
+
+    <update id="updateRecoveryEndTime">
+        UPDATE treatment_information
+        SET recovery_end_time = CURRENT_TIMESTAMP
+        WHERE treatment_information_id = #{treatmentInformationId}
+    </update>
 </mapper>

@@ -1,7 +1,10 @@
 package com.medical.pojo;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lombok.Setter;
+import lombok.AccessLevel;
 
 @Data
 public class Recovery {
@@ -35,7 +38,36 @@ public class Recovery {
 	private Boolean spatialOrientation;
 	private Boolean calculationAbility;
 	private Boolean memory;
-	private String pupilEqual;
+    @Setter(AccessLevel.NONE)
+	private Boolean pupilEqual;
+
+    @JsonSetter("pupilEqual")
+    public void setPupilEqual(Object pupilEqual) {
+        this.pupilEqual = parsePupilEqual(pupilEqual);
+    }
+
+    private Boolean parsePupilEqual(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Boolean booleanValue) {
+            return booleanValue;
+        }
+        if (value instanceof Number numberValue) {
+            return numberValue.intValue() != 0;
+        }
+
+        String normalized = value.toString().trim();
+        if (normalized.isEmpty()) {
+            return null;
+        }
+
+        return switch (normalized.toLowerCase()) {
+            case "true", "1", "yes", "y", "等大", "是" -> true;
+            case "false", "0", "no", "n", "不等大", "否" -> false;
+            default -> throw new IllegalArgumentException("Unsupported pupilEqual value: " + value);
+        };
+    }
 }
 
 

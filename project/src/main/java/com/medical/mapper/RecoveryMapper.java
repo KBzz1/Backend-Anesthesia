@@ -2,6 +2,7 @@ package com.medical.mapper;
 
 import com.medical.pojo.Recovery;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface RecoveryMapper {
@@ -15,4 +16,6 @@ public interface RecoveryMapper {
      * 出室评估：插入 recovery_area_room_assessment 表。
      */
     void insertAssessment(Recovery recovery);
+
+    void updateRecoveryEndTime(@Param("treatmentInformationId") Integer treatmentInformationId);
 }
