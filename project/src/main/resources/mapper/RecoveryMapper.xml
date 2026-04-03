@@ -60,7 +60,7 @@
             #{spatialOrientation},
             #{calculationAbility},
             #{memory},
-            #{pupilEqual}
+            #{pupilEqual,jdbcType=BOOLEAN}
         )
     </insert>
 
@@ -119,13 +119,19 @@
             #{spatialOrientation},
             #{calculationAbility},
             #{memory},
-            #{pupilEqual}
+            #{pupilEqual,jdbcType=BOOLEAN}
         )
     </insert>
 
     <update id="updateRecoveryEndTime">
         UPDATE treatment_information
         SET recovery_end_time = CURRENT_TIMESTAMP
+        WHERE treatment_information_id = #{treatmentInformationId}
+    </update>
+
+    <update id="updateRecoveryDoctorId">
+        UPDATE treatment_information
+        SET recovery_doctor_id = #{staffId}
         WHERE treatment_information_id = #{treatmentInformationId}
     </update>
 </mapper>

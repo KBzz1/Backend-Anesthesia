@@ -9,6 +9,8 @@ import java.time.Instant;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Data {
+    // surgeryId for /data/sub/all endpoint (maps to treatment_information_id)
+    private String surgeryId;
     private int resp;
     private int bo;
     private int hr;

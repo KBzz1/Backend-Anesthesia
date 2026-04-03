@@ -6,6 +6,7 @@
 <mapper namespace="com.medical.mapper.ARSMapper">
 
     <resultMap id="AnesthesiaRecordSummaryMap" type="com.medical.pojo.DTO.AnesthesiaRecordSummaryDTO">
+        <result property="patientId" column="patient_id"/>
         <result property="name" column="name"/>
         <result property="gender" column="gender"/>
         <result property="age" column="age"/>
@@ -48,6 +49,7 @@
 
     <select id="findByTreatmentId" parameterType="long" resultMap="AnesthesiaRecordSummaryMap">
         SELECT
+            p.patient_id,
             p.name,
             p.gender,
             p.age,
@@ -128,6 +130,12 @@
 
     <select id="findAnesthesiologistIdByTreatmentId" parameterType="long" resultType="long">
         SELECT anesthesiologist_id
+        FROM treatment_information
+        WHERE treatment_information_id = #{treatmentId}
+    </select>
+
+    <select id="findRecoveryDoctorIdByTreatmentId" parameterType="long" resultType="long">
+        SELECT recovery_doctor_id
         FROM treatment_information
         WHERE treatment_information_id = #{treatmentId}
     </select>

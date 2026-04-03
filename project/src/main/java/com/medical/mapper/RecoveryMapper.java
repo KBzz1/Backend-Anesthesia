@@ -18,4 +18,7 @@ public interface RecoveryMapper {
     void insertAssessment(Recovery recovery);
 
     void updateRecoveryEndTime(@Param("treatmentInformationId") Integer treatmentInformationId);
+
+    void updateRecoveryDoctorId(@Param("treatmentInformationId") Integer treatmentInformationId,
+                                @Param("staffId") Long staffId);
 }

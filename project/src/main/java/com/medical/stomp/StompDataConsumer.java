@@ -62,6 +62,14 @@ public class StompDataConsumer {
     @Value("${stomp.topic:/data/sub/34:81:F4:75:20:70}")
     private String topic;
 
+    // 设备MAC地址，用于从绑定接口查询surgeryId
+    @Value("${stomp.device-id:}")
+    private String deviceId;
+    
+    // 绑定查询间隔（毫秒）
+    @Value("${stomp.binding-check-interval:5000}")
+    private long bindingCheckInterval;
+
     @Autowired
     private DeviceBindingService deviceBindingService;
 
@@ -74,6 +82,10 @@ public class StompDataConsumer {
     private final Map<String, CachedBindingInfo> bindingCache = new ConcurrentHashMap<>();
     // Cache for devices with no binding: DeviceID -> LastCheckTimestamp
     private final Map<String, Long> noBindingCache = new ConcurrentHashMap<>();
+    
+    // 当前绑定的 surgeryId（从绑定接口获取）
+    private volatile Long currentSurgeryId = null;
+    private volatile long lastBindingCheckTime = 0;
     
     // Buffer for batch writing
     private final LinkedBlockingQueue<Object> buffer = new LinkedBlockingQueue<>(50000);
@@ -189,13 +201,10 @@ public class StompDataConsumer {
                             Data data = objectMapper.readValue(bytes, Data.class);
                             log.info("DEBUG - Parsed Data: {}", data);
                             debugLogCount.incrementAndGet();
-                            
-                            String deviceId = getDeviceIdFromTopic(topic);
-                            processMessage(deviceId, data);
+                            processMessage(data);
                         } else {
                             Data data = objectMapper.readValue(bytes, Data.class);
-                            String deviceId = getDeviceIdFromTopic(topic);
-                            processMessage(deviceId, data);
+                            processMessage(data);
                         }
                     } catch (Exception e) {
                         log.error("Error processing message", e);
@@ -223,39 +232,138 @@ public class StompDataConsumer {
         return parts[parts.length - 1];
     }
 
-    private void processMessage(String deviceId, Data data) {
-        // 1. Get Binding Info
-        BindingInfo binding = getBindingInfo(deviceId);
-        if (binding == null) {
-            return; 
+    // Counter for unbound device logs (to avoid spam)
+    private final AtomicInteger unboundLogCount = new AtomicInteger(0);
+    private volatile long lastUnboundLogTime = 0;
+
+    /**
+     * 从绑定接口获取当前设备绑定的 surgeryId
+     * 定期刷新，避免频繁请求
+     */
+    private Long getSurgeryIdFromBinding() {
+        long now = System.currentTimeMillis();
+        
+        // 如果缓存有效，直接返回
+        if (currentSurgeryId != null && (now - lastBindingCheckTime) < bindingCheckInterval) {
+            return currentSurgeryId;
         }
-
-        long surgeryId = binding.getSurgeryId();
-        Instant time = Instant.ofEpochMilli(data.getTimestamp());
-
-        // 2. Process Waveforms
-        // ECG (250Hz) - Parameter ID 1
-        buffer.offer(new Waveform(time, surgeryId, 1, (int) data.getEcg()));
-
-        // SpO2 Wave (50Hz) - Parameter ID 5
-        // Resp Wave (50Hz) - Parameter ID 6
-        // Downsample 250Hz -> 50Hz (1 in 5)
-        long count = waveformCounters.merge(deviceId, 1L, Long::sum);
-        if (count % 5 == 0) {
-             buffer.offer(new Waveform(time, surgeryId, 5, (int) data.getBoWave()));
-             buffer.offer(new Waveform(time, surgeryId, 6, (int) data.getRespWave()));
+        
+        // 需要查询绑定接口
+        if (deviceId == null || deviceId.isEmpty()) {
+            // 没有配置设备ID，无法查询
+            return null;
         }
-
-        // 3. Process Parameters
-        processParameter(deviceId, surgeryId, time, 2, (float) data.getHr(), 1000); // HR 1Hz
-        processParameter(deviceId, surgeryId, time, 3, data.getBp(), 500); // BP 2Hz
-        processParameter(deviceId, surgeryId, time, 4, (float) data.getBo(), 1000); // SpO2 1Hz
-        processParameter(deviceId, surgeryId, time, 7, data.getTemp(), 2000); // Temp 1Hz (or slower)
-        processParameter(deviceId, surgeryId, time, 8, (float) data.getResp(), 1000); // Resp 1Hz
+        
+        try {
+            BindingInfo bindingInfo = deviceBindingService.getBindingInfo(deviceId);
+            lastBindingCheckTime = now;
+            
+            if (bindingInfo != null && bindingInfo.getSurgeryId() != null) {
+                Long newSurgeryId = Long.parseLong(bindingInfo.getSurgeryId());
+                if (!newSurgeryId.equals(currentSurgeryId)) {
+                    log.info("🔗 设备 [{}] 绑定到 surgeryId [{}]", deviceId, newSurgeryId);
+                    currentSurgeryId = newSurgeryId;
+                }
+                return currentSurgeryId;
+            } else {
+                if (currentSurgeryId != null) {
+                    log.info("🔗 设备 [{}] 解除绑定", deviceId);
+                    currentSurgeryId = null;
+                }
+                return null;
+            }
+        } catch (Exception e) {
+            log.warn("查询设备绑定失败: {}", e.getMessage());
+            return currentSurgeryId; // 返回上次的缓存值
+        }
     }
 
-    private void processParameter(String deviceId, long surgeryId, Instant time, int paramId, float value, long minIntervalMs) {
-        Map<Integer, LastRecord> deviceRecords = lastRecordCache.computeIfAbsent(deviceId, k -> new ConcurrentHashMap<>());
+    private void processMessage(Data data) {
+        Long surgeryId = null;
+        String cacheKey;
+
+        // 优先使用数据中的 surgeryId (from /data/sub/all)
+        if (data.getSurgeryId() != null && !data.getSurgeryId().isEmpty()) {
+            try {
+                surgeryId = Long.parseLong(data.getSurgeryId());
+                cacheKey = "surgery_" + surgeryId;
+                // Log when receiving data for a bound surgery
+                if (debugLogCount.get() < 10) {
+                    log.info("✅ 从数据中获取 surgeryId [{}]: hr={}, bo={}, temp={}", 
+                        surgeryId, data.getHr(), data.getBo(), data.getTemp());
+                }
+            } catch (NumberFormatException e) {
+                log.warn("Invalid surgeryId format: {}", data.getSurgeryId());
+                return;
+            }
+        } else {
+            // 数据中没有 surgeryId，尝试从绑定接口获取
+            surgeryId = getSurgeryIdFromBinding();
+            
+            if (surgeryId != null) {
+                cacheKey = "surgery_" + surgeryId;
+                // 每30秒打印一次日志
+                long now = System.currentTimeMillis();
+                if (now - lastUnboundLogTime > 30000) {
+                    lastUnboundLogTime = now;
+                    log.info("✅ 从绑定接口获取 surgeryId [{}]: hr={}, bo={}, temp={}", 
+                        surgeryId, data.getHr(), data.getBo(), data.getTemp());
+                }
+            } else {
+                // 设备未绑定，跳过
+                long now = System.currentTimeMillis();
+                if (now - lastUnboundLogTime > 30000) {
+                    lastUnboundLogTime = now;
+                    int count = unboundLogCount.getAndSet(0);
+                    log.info("⏭️ 跳过 {} 条数据 (设备 [{}] 未绑定到任何手术)", count + 1, deviceId);
+                } else {
+                    unboundLogCount.incrementAndGet();
+                }
+                return;
+            }
+        }
+
+        if (surgeryId == null) {
+            return;
+        }
+
+        Instant time = Instant.ofEpochMilli(data.getTimestamp());
+
+        // Process Waveforms (only if ecg/boWave/respWave are present)
+        if (data.getEcg() != 0) {
+            // ECG (250Hz) - Parameter ID 1
+            buffer.offer(new Waveform(time, surgeryId, 1, (int) data.getEcg()));
+
+            // SpO2 Wave (50Hz) - Parameter ID 5
+            // Resp Wave (50Hz) - Parameter ID 6
+            // Downsample 250Hz -> 50Hz (1 in 5)
+            long count = waveformCounters.merge(cacheKey, 1L, Long::sum);
+            if (count % 5 == 0) {
+                buffer.offer(new Waveform(time, surgeryId, 5, (int) data.getBoWave()));
+                buffer.offer(new Waveform(time, surgeryId, 6, (int) data.getRespWave()));
+            }
+        }
+
+        // Process Parameters (low-frequency data from /data/sub/all)
+        if (data.getHr() > 0) {
+            processParameter(cacheKey, surgeryId, time, 2, (float) data.getHr(), 1000); // HR 1Hz
+        }
+        if (data.getBp() > 0) {
+            processParameter(cacheKey, surgeryId, time, 3, data.getBp(), 500); // BP 2Hz
+        }
+        if (data.getBo() > 0) {
+            processParameter(cacheKey, surgeryId, time, 4, (float) data.getBo(), 1000); // SpO2 1Hz
+        }
+        if (data.getTemp() > 0) {
+            processParameter(cacheKey, surgeryId, time, 7, data.getTemp(), 2000); // Temp 0.5Hz
+        }
+        if (data.getResp() > 0) {
+            processParameter(cacheKey, surgeryId, time, 8, (float) data.getResp(), 1000); // Resp 1Hz
+        }
+    }
+
+    private void processParameter(String cacheKey, long surgeryId, Instant time, int paramId, float value, long minIntervalMs) {
+        Map<Integer, LastRecord> deviceRecords = lastRecordCache.computeIfAbsent(cacheKey, k -> new ConcurrentHashMap<>());
         LastRecord last = deviceRecords.get(paramId);
 
         boolean shouldSave = false;
@@ -331,13 +439,16 @@ public class StompDataConsumer {
             waveformStats.computeIfAbsent(w.getTreatmentInformationId(), k -> new AtomicInteger(0)).incrementAndGet();
         }
 
-        String sql = "INSERT INTO public.waveform (time, treatment_information_id, parameter_id, amplitude) VALUES (?, ?, ?, ?)";
+        // 使用 ON CONFLICT DO NOTHING 避免主键冲突导致整批失败
+        String sql = "INSERT INTO public.waveform (time, treatment_information_id, parameter_id, amplitude) " +
+                     "VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING";
         try {
             jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
                 @Override
                 public void setValues(PreparedStatement ps, int i) throws SQLException {
                     Waveform w = list.get(i);
-                    ps.setTimestamp(1, Timestamp.from(w.getTime()));
+                    // 使用 TIMESTAMPTZ 类型
+                    ps.setObject(1, java.time.OffsetDateTime.ofInstant(w.getTime(), java.time.ZoneId.systemDefault()));
                     ps.setLong(2, w.getTreatmentInformationId());
                     ps.setInt(3, w.getParameterId());
                     ps.setInt(4, w.getAmplitude());
@@ -349,7 +460,7 @@ public class StompDataConsumer {
                 }
             });
         } catch (Exception e) {
-            log.error("Error batch inserting waveforms", e);
+            log.error("Error batch inserting waveforms: {}", e.getMessage());
         }
     }
 
@@ -359,13 +470,16 @@ public class StompDataConsumer {
             parameterStats.computeIfAbsent(p.getTreatmentInformationId(), k -> new AtomicInteger(0)).incrementAndGet();
         }
 
-        String sql = "INSERT INTO public.waveform_parameter (time, treatment_information_id, parameter_id, value) VALUES (?, ?, ?, ?)";
+        // 使用 ON CONFLICT DO NOTHING 避免主键冲突导致整批失败
+        String sql = "INSERT INTO public.waveform_parameter (time, treatment_information_id, parameter_id, value) " +
+                     "VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING";
         try {
             jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
                 @Override
                 public void setValues(PreparedStatement ps, int i) throws SQLException {
                     WaveformParameter p = list.get(i);
-                    ps.setTimestamp(1, Timestamp.from(p.getTime()));
+                    // 使用 TIMESTAMPTZ 类型
+                    ps.setObject(1, java.time.OffsetDateTime.ofInstant(p.getTime(), java.time.ZoneId.systemDefault()));
                     ps.setLong(2, p.getTreatmentInformationId());
                     ps.setInt(3, p.getParameterId());
                     ps.setFloat(4, p.getValue());
@@ -377,7 +491,7 @@ public class StompDataConsumer {
                 }
             });
         } catch (Exception e) {
-            log.error("Error batch inserting parameters", e);
+            log.error("Error batch inserting parameters: {}", e.getMessage());
         }
     }
 

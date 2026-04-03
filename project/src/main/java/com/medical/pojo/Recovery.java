@@ -1,7 +1,12 @@
 package com.medical.pojo;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.io.IOException;
 import lombok.Data;
 import lombok.Setter;
 import lombok.AccessLevel;
@@ -11,6 +16,7 @@ public class Recovery {
 
 	private Integer recoveryRoomRecordId;
 	private Integer treatmentInformationId;
+    private Long staffId;
 
 	private Integer bp;
     @JsonProperty("pBpm")
@@ -38,6 +44,7 @@ public class Recovery {
 	private Boolean spatialOrientation;
 	private Boolean calculationAbility;
 	private Boolean memory;
+    @JsonDeserialize(using = PupilEqualDeserializer.class)
     @Setter(AccessLevel.NONE)
 	private Boolean pupilEqual;
 
@@ -46,7 +53,7 @@ public class Recovery {
         this.pupilEqual = parsePupilEqual(pupilEqual);
     }
 
-    private Boolean parsePupilEqual(Object value) {
+    static Boolean parsePupilEqual(Object value) {
         if (value == null) {
             return null;
         }
@@ -67,6 +74,13 @@ public class Recovery {
             case "false", "0", "no", "n", "不等大", "否" -> false;
             default -> throw new IllegalArgumentException("Unsupported pupilEqual value: " + value);
         };
+    }
+
+    public static class PupilEqualDeserializer extends JsonDeserializer<Boolean> {
+        @Override
+        public Boolean deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+            return parsePupilEqual(parser.readValueAs(Object.class));
+        }
     }
 }
 

@@ -18,7 +18,7 @@ public class MedicalStaffInfoServiceImpl implements MedicalStaffInfoService {
     public StaffInfoDTO getStaffInfo(Long staffId) {
         MedicalStaffInfo staff = medicalStaffInfoMapper.getStaffById(staffId);
         if (staff != null) {
-            return new StaffInfoDTO(staff.getName(), staff.getTitle(), staff.getGender());
+            return new StaffInfoDTO(staff.getName(), staff.getPosition(), staff.getGender());
         }
         return null;
     }

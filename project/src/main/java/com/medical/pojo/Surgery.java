@@ -15,6 +15,7 @@ public class Surgery {
     private String surgeryMethod;
     private String otherSurgeryMethod;
     private String anesthesiaMethod;
-//    private Boolean isEmergency;
+    // 急诊标识
+    private Boolean isEmergency;
 }
 

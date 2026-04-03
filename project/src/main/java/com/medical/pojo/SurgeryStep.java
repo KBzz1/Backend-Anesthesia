@@ -13,5 +13,4 @@ public class SurgeryStep {
     private Long treatmentInformationId;
     private String stepName;
     private Timestamp stepTime;
-    private Timestamp createdAt;
 }

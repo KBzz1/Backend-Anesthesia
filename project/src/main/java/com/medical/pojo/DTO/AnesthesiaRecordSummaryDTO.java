@@ -1,5 +1,6 @@
 package com.medical.pojo.DTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 /**
@@ -26,6 +27,8 @@ public class AnesthesiaRecordSummaryDTO {
     }
 
     // 基本信息：来自 patient / paa_information
+    @JsonIgnore
+    private Long patientId;
     private String name;
     private String gender;
     private Integer age;
@@ -44,10 +47,12 @@ public class AnesthesiaRecordSummaryDTO {
     private String preoperativeSpecialCondition;
 
     // 麻醉医师信息
-    private AnesthesiologistInfo anesthesiologist;
+    private DoctorInfo anesthesiologist;
+    // 恢复区医师信息
+    private DoctorInfo recoveryDoctor;
 
     @Data
-    public static class AnesthesiologistInfo {
+    public static class DoctorInfo {
         private String name;
         private String signature;
     }

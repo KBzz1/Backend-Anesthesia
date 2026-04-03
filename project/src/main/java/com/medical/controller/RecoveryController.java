@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,14 +22,18 @@ public class RecoveryController {
     private RecoveryService recoveryService;
 
     @PostMapping
-    public Result create(@RequestBody Recovery recovery) {
+    public Result create(@RequestAttribute("auth.staffId") Long tokenStaffId,
+                         @RequestBody Recovery recovery) {
+        recovery.setStaffId(tokenStaffId);
         log.info("[recovery] 反序列化后对象: {}", recovery);
         Recovery saved = recoveryService.save(recovery);
         return Result.success(saved);
     }
 
     @PostMapping("/out")
-    public Result createAssessment(@RequestBody Recovery recovery) {
+    public Result createAssessment(@RequestAttribute("auth.staffId") Long tokenStaffId,
+                                   @RequestBody Recovery recovery) {
+        recovery.setStaffId(tokenStaffId);
         log.info("[recovery/out] 反序列化后对象: {}", recovery);
         Recovery saved = recoveryService.saveAssessment(recovery);
         return Result.success(saved);

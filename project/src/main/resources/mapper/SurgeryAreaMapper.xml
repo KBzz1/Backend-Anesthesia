@@ -21,6 +21,7 @@
             <result property="surgeryMethod" column="surgery_method"/>
             <result property="otherSurgeryMethod" column="other_surgery_method"/>
             <result property="anesthesiaMethod" column="anesthesia_method"/>
+            <result property="isEmergency" column="is_emergency"/>
         </association>
         
         <association property="paa" javaType="com.medical.pojo.PaaInformation">
@@ -125,6 +126,7 @@
             t.surgery_method as t_surgery_method,
             t.other_surgery_method as t_other_surgery_method,
             t.anesthesia_method as t_anesthesia_method,
+            t.is_emergency as t_is_emergency,
 
             paa.*
         FROM treatment_information t

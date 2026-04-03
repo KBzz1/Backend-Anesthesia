@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class BindingInfo {
-    private Long surgeryId; // treatment_information_id
+    private String surgeryId; // treatment_information_id (接口返回String)
     private Long bindTime;
 }

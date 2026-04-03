@@ -19,7 +19,12 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private static final String PROTECTED_PATH = "/surgeryArea/anesthesiologist2";
+    // Paths that require JWT authentication
+    private static final String[] PROTECTED_PATHS = {
+        "/surgeryArea/anesthesiologist2",
+        "/surgeryArea/mySignature",
+        "/recovery"
+    };
 
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtAuthEntryPoint authEntryPoint;
@@ -33,9 +38,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
         // Skip filtering for non-protected paths and preflight requests
-        return "OPTIONS".equalsIgnoreCase(request.getMethod())
-            || path == null
-            || !path.startsWith(PROTECTED_PATH);
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod()) || path == null) {
+            return true;
+        }
+        // Check if path matches any protected path
+        for (String protectedPath : PROTECTED_PATHS) {
+            if (path.startsWith(protectedPath)) {
+                return false; // Do not skip filter - need JWT auth
+            }
+        }
+        return true; // Skip filter for non-protected paths
     }
 
     @Override

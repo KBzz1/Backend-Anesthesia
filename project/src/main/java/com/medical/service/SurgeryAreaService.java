@@ -8,4 +8,5 @@ public interface SurgeryAreaService {
     SurgeryAreaDTO getSurgeryAreaInfo(Long surgeryId);
     void saveSurgeryAreaRecord(Long surgeryId, SurgeryAreaRecordDTO recordDTO);
     String saveAnesthesiologist(AnesthesiologistRequestDTO requestDTO);
+    String getSignatureOnly(Long staffId);
 }

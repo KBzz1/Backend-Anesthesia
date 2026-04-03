@@ -1,19 +1,42 @@
 server:
   port: 8080
+  address: 0.0.0.0
 
 spring:
   application:
     name: project
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://10.242.90.240:5432/anesthesia
+    url: jdbc:postgresql://localhost:5432/anesthesia
     username: postgres
     password: medical310
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          lob:
+            non_contextual_creation: true
 
 stomp:
   server:
     url: ws://10.242.20.251:8080/ws
-  topic: /data/sub/34:81:F4:75:20:70
+  # 订阅特定设备：/data/sub/{deviceId}，deviceId 是设备MAC地址
+  # 订阅所有设备：/data/sub/all
+  topic: /data/sub/5A:48:68:5E:5B:FA
+  # 设备MAC地址（用于从绑定接口查询surgeryId）
+  device-id: 5A:48:68:5E:5B:FA
+  # 绑定查询间隔（毫秒），默认5秒
+  binding-check-interval: 5000
+
+device:
+  binding:
+    url: http://10.242.20.251:8080/device/binding/device/
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml
@@ -23,8 +46,8 @@ mybatis:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 auth:
-  enabled: false # set true to enforce token check
-  shared-secret: "" # set to your token value (for simple shared-secret validation)
+  enabled: false
+  shared-secret: ""
   header: Authorization
   bearer-prefix: "Bearer "
   ignore-paths: /error,/actuator/**
@@ -32,5 +55,21 @@ auth:
 jwt:
   secret: Gvq3qwTLtylD/thEZikRdVUU2c5dv1GW+ZpC3BJDwOLU+8f22qPhFA5YXnRalpMz92HD3YiCCFjhyLM0mYGn8A==
   expiration: 18000000
-
-
+logging:
+  file:
+    name: app.log
+    path: .
+  level:
+    root: INFO
+    com.medical: INFO
+    org.springframework: INFO
+    org.hibernate: WARN
+    org.springframework.web.socket: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %5p %5pid --- [%15.15t] %-40.40logger{39} : %m%n"
+    file: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %5p %5pid --- [%15.15t] %-40.40logger{39} : %m%n"
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
+      total-size-cap: 1GB

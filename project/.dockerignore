@@ -1,0 +1,35 @@
+# 构建产物
+target/
+*.jar
+*.war
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# Git
+.git/
+.gitignore
+
+# 日志
+*.log
+logs/
+
+# 临时文件
+*.tmp
+*.swp
+*~
+
+# Maven
+.mvn/repository/
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# 文档
+*.md
+docs/

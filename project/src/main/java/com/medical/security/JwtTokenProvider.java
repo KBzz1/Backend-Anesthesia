@@ -4,7 +4,11 @@ import java.util.Date;
 
 import javax.crypto.SecretKey;
 
+import com.medical.pojo.auth.User;
+import com.medical.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
@@ -24,6 +28,9 @@ public class JwtTokenProvider {
 
     private SecretKey cachedKey;
 
+    @Autowired(required = false)
+    private UserRepository userRepository;
+
     @PostConstruct
     void init() {
         cachedKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
@@ -38,6 +45,35 @@ public class JwtTokenProvider {
             .expiration(expireDate)
             .signWith(key())
             .compact();
+    }
+
+    public String generateToken(Authentication authentication) {
+        String username = authentication.getName();
+        Date currentDate = new Date();
+        Date expireDate = new Date(currentDate.getTime() + jwtExpirationDate);
+        
+        // Try to get staff_id from user repository
+        Long staffId = null;
+        if (userRepository != null) {
+            try {
+                User user = userRepository.findByUsernameOrEmail(username, username).orElse(null);
+                if (user != null) {
+                    staffId = user.getStaffId();
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        
+        var builder = Jwts.builder()
+            .subject(username)
+            .issuedAt(new Date())
+            .expiration(expireDate);
+        
+        if (staffId != null) {
+            builder.claim("staff_id", staffId);
+        }
+        
+        return builder.signWith(key()).compact();
     }
 
     public String getUsername(String token) {

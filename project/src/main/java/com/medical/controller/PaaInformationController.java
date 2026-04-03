@@ -39,6 +39,9 @@ public class PaaInformationController {
     @GetMapping("/byTreatment/{surgeryId}")
     public Result getByTreatment(@PathVariable Long surgeryId) {
         PaaInformation paaInformation = paaInformationService.getBySurgeryId(surgeryId);
+        if (paaInformation == null) {
+            return Result.error("未找到该手术ID对应的评估记录: " + surgeryId);
+        }
         return Result.success(paaInformation);
     }
 

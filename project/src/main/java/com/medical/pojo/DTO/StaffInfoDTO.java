@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class StaffInfoDTO {
     private String name;
-    private String title;
+    private String position;
     private String gender;
 }

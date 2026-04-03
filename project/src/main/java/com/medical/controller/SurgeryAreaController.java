@@ -64,4 +64,17 @@ public class SurgeryAreaController {
         data.put("signature", signature);
         return Result.success(data);
     }
+
+    // 仅获取当前登录医生的签名，不需要任何 body 参数
+    @PostMapping("/mySignature")
+    public Result getMySignature(@RequestAttribute("auth.staffId") Long tokenStaffId) {
+        if (tokenStaffId == null) {
+            return Result.error("Unauthorized: missing staffId in token");
+        }
+
+        String signature = surgeryAreaService.getSignatureOnly(tokenStaffId);
+        Map<String, String> data = new HashMap<>();
+        data.put("signature", signature);
+        return Result.success(data);
+    }
 }

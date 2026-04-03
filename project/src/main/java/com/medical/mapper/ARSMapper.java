@@ -20,6 +20,8 @@ public interface ARSMapper {
 
     Long findAnesthesiologistIdByTreatmentId(Long treatmentId);
 
+    Long findRecoveryDoctorIdByTreatmentId(Long treatmentId);
+
     String findStaffNameById(Long staffId);
 
     List<Object> findSignatureById(Long staffId);

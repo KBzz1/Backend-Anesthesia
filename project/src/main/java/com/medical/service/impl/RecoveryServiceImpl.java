@@ -16,6 +16,9 @@ public class RecoveryServiceImpl implements RecoveryService {
     public Recovery save(Recovery recovery) {
         // 入室记录：插入 recovery_room_record 表
         recoveryMapper.insertRoomRecord(recovery);
+        if (recovery != null && recovery.getTreatmentInformationId() != null && recovery.getStaffId() != null) {
+            recoveryMapper.updateRecoveryDoctorId(recovery.getTreatmentInformationId(), recovery.getStaffId());
+        }
         return recovery;
     }
 
@@ -24,6 +27,9 @@ public class RecoveryServiceImpl implements RecoveryService {
         // 出室评估：插入 recovery_area_room_assessment 表
         recoveryMapper.insertAssessment(recovery);
         if (recovery != null && recovery.getTreatmentInformationId() != null) {
+            if (recovery.getStaffId() != null) {
+                recoveryMapper.updateRecoveryDoctorId(recovery.getTreatmentInformationId(), recovery.getStaffId());
+            }
             recoveryMapper.updateRecoveryEndTime(recovery.getTreatmentInformationId());
         }
         return recovery;
