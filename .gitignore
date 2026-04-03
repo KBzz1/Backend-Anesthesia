@@ -8,9 +8,14 @@ Backend-Anesthesia.localbak/
 
 *.log
 *.lck
+*.pyc
+*.msg
 
 **/.m2-local/
 **/target/
 **/app.log
+**/.idea/
+**/__pycache__/
+**/mqttx*/
 
 .DS_Store
