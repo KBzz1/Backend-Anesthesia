@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.medical.mapper.PaaInformationMapper">
+
+    <resultMap id="PaaInformationResultMap" type="com.medical.pojo.PaaInformation">
+        <id property="paaId" column="paa_id"/>
+            <result property="surgeryId" column="treatment_information_id"/>
+        <result property="height" column="height"/>
+        <result property="weight" column="weight"/>
+        <result property="idCardNumber" column="id_card_number"/>
+        <result property="hisIsHypertension" column="his_is_hypertension"/>
+        <result property="hisIsChronicBronchitis" column="his_is_chronic_bronchitis"/>
+        <result property="hisIsOsas" column="his_is_osas"/>
+        <result property="hisIsDiabetes" column="his_is_diabetes"/>
+        <result property="hisIsAsthma" column="his_is_asthma"/>
+        <result property="hisIsStroke" column="his_is_stroke"/>
+        <result property="hisIsCoronaryHeartDisease" column="his_is_coronary_heart_disease"/>
+        <result property="hisIsArrhythmia" column="his_is_arrhythmia"/>
+        <result property="hisIsCopd" column="his_is_copd"/>
+        <result property="hisIsPepticUlcer" column="his_is_peptic_ulcer"/>
+        <result property="hisIsThyroidDysfunction" column="his_is_thyroid_dysfunction"/>
+        <result property="hisIsHematemesisOrMelena" column="his_is_hematemesis_or_melena"/>
+
+        <result property="hisOthers" column="his_others"/>
+        <result property="longTermMedication" column="is_long_term_medication"/>
+        <result property="medicationNameAndUsage" column="medication_name_and_usage"/>
+        <result property="smokeHis" column="smoke_his"/>
+        <result property="drinkHis" column="drink_his"/>
+
+        <result property="anesthesiaHis" column="is_anesthesia_his"/>
+        <result property="anesthesiaTypeAndAdverseReactionHis" column="anesthesia_type_and_adverse_reaction_his"/>
+        <result property="anesthesiaSpecialConditionsHis" column="anesthesia_special_conditions_his"/>
+
+        <result property="peVitalSignsStatus" column="pe_vital_signs_status"/>
+        <result property="bloodpresure" column="pe_bp"/>
+        <result property="pePulseRate" column="pe_pulse_rate"/>
+        <result property="peSpo2" column="pe_spo2"/>
+        <result property="peIsHypertension" column="pe_is_hypertension"/>
+        <result property="peIsHypotension" column="pe_is_hypotension"/>
+        <result property="peIsTachycardia" column="pe_is_tachycardia"/>
+        <result property="peIsBradycardia" column="pe_is_bradycardia"/>
+        <result property="peIsTachypnea" column="pe_is_tachypnea"/>
+        <result property="peIsFever" column="pe_is_fever"/>
+        <result property="peConsciousness" column="pe_consciousness"/>
+
+        <result property="peIsAuscultationNormal" column="pe_is_auscultation_normal"/>
+        <result property="peIsBreathSoundCoarse" column="pe_is_breath_sound_coarse"/>
+        <result property="peIsMoistRales" column="pe_is_moist_rales"/>
+        <result property="peIsWheezing" column="pe_is_wheezing"/>
+        <result property="peIsBreathSoundAsymmetric" column="pe_is_breath_sound_asymmetric"/>
+        <result property="peIsBreathSoundDiminished" column="pe_is_breath_sound_diminished"/>
+        <result property="peIsHeartMurmur" column="pe_is_heart_murmur"/>
+        <result property="peIsArrhythmia" column="pe_is_arrhythmia"/>
+        <result property="peIsCardiopulmonaryAuscultationNormal" column="pe_is_cardiopulmonary_auscultation_normal"/>
+        <result property="peIsMouthOpenLt3cm" column="pe_is_mouth_open_lt_3cm"/>
+        <result property="peIsThyromentalDistanceLt6cm" column="pe_is_thyromental_distance_lt_6cm"/>
+        <result property="peIsMicrognathia" column="pe_is_micrognathia"/>
+        <result property="peIsMallampatiGe3" column="pe_is_mallampati_ge_3"/>
+        <result property="peIsDentitionAbnormal" column="pe_is_dentition_abnormal"/>
+        <result property="peIsLimitedNeckMobility" column="pe_is_limited_neck_mobility"/>
+        <result property="peIsAirwayNormal" column="pe_is_airway_normal"/>
+        <result property="peIsPunctureSiteNormal" column="pe_is_puncture_site_normal"/>
+        <result property="peIsPunctureSiteInfected" column="pe_is_puncture_site_infected"/>
+        <result property="peIsPunctureSiteUlcerated" column="pe_is_puncture_site_ulcerated"/>
+        <result property="peIsSpinalMalformation" column="pe_is_spinal_malformation"/>
+
+        <result property="labBloodRoutineStatus" column="lab_blood_routine_status"/>
+        <result property="labEcgStatus" column="lab_ecg_status"/>
+        <result property="labChestXrayStatus" column="lab_chest_xray_status"/>
+        <result property="labBloodGasStatus" column="lab_blood_gas_status"/>
+        <result property="labDynamicEcgStatus" column="lab_dynamic_ecg_status"/>
+        <result property="labCardiacUltrasoundStatus" column="lab_cardiac_ultrasound_status"/>
+        <result property="labLungFunctionStatus" column="lab_lung_function_status"/>
+        <result property="labCoagulationStatus" column="lab_coagulation_status"/>
+        <result property="labElectrolyteStatus" column="lab_electrolyte_status"/>
+        <result property="labHepaticRenalFunction" column="lab_hepatic_renal_function"/>
+        <result property="labElse" column="lab_else"/>
+        <result property="labAbnormalDescription" column="lab_abnormal_description"/>
+        <result property="labCoronaryAngiography" column="lab_coronary_angiography"/>
+
+        <result property="asaClass" column="asa_class"/>
+        <result property="cardiacFunctionClass" column="cardiac_function_class"/>
+        <result property="airwayDifficulty" column="airway_difficulty"/>
+        <result property="anesthesiaRiskLevel" column="anesthesia_risk_level"/>
+        <result property="furtherDiagnosisPlan" column="further_diagnosis_plan"/>
+
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+
+        <result property="chiefComplaint" column="chief_complaint"/>
+        <result property="specialRiskNotice" column="special_risk_notice"/>
+        <result property="agentRelationship" column="agent_relationship"/>
+        <result property="asaClassSuggestion" column="asa_class_suggestion"/>
+    </resultMap>
+
+    <select id="getBySurgeryId" parameterType="long" resultMap="PaaInformationResultMap">
+        SELECT *
+            FROM paa_information
+            WHERE treatment_information_id = #{surgeryId}
+        LIMIT 1
+    </select>
+
+    <insert id="insert" parameterType="com.medical.pojo.PaaInformation" useGeneratedKeys="true" keyProperty="paaId">
+        INSERT INTO paa_information (
+            treatment_information_id,
+            height,
+            weight,
+            his_is_hypertension,
+            his_is_chronic_bronchitis,
+            his_is_osas,
+            his_is_diabetes,
+            his_is_asthma,
+            his_is_stroke,
+            his_is_coronary_heart_disease,
+            his_is_arrhythmia,
+            his_is_copd,
+            his_is_peptic_ulcer,
+            his_is_thyroid_dysfunction,
+            his_is_hematemesis_or_melena,
+            his_others,
+            is_long_term_medication,
+            medication_name_and_usage,
+            smoke_his,
+            drink_his,
+            is_anesthesia_his,
+            anesthesia_type_and_adverse_reaction_his,
+            anesthesia_special_conditions_his,
+            pe_vital_signs_status,
+            pe_bp,
+            pe_pulse_rate,
+            pe_spo2,
+            pe_is_hypertension,
+            pe_is_hypotension,
+            pe_is_tachycardia,
+            pe_is_bradycardia,
+            pe_is_tachypnea,
+            pe_is_fever,
+            pe_consciousness,
+            pe_is_auscultation_normal,
+            pe_is_breath_sound_coarse,
+            pe_is_moist_rales,
+            pe_is_wheezing,
+            pe_is_breath_sound_asymmetric,
+            pe_is_breath_sound_diminished,
+            pe_is_heart_murmur,
+            pe_is_arrhythmia,
+            pe_is_cardiopulmonary_auscultation_normal,
+            pe_is_mouth_open_lt_3cm,
+            pe_is_thyromental_distance_lt_6cm,
+            pe_is_micrognathia,
+            pe_is_mallampati_ge_3,
+            pe_is_dentition_abnormal,
+            pe_is_limited_neck_mobility,
+            pe_is_puncture_site_normal,
+            pe_is_puncture_site_infected,
+            pe_is_puncture_site_ulcerated,
+            pe_is_spinal_malformation,
+            lab_blood_routine_status,
+            lab_blood_gas_status,
+            lab_dynamic_ecg_status,
+            lab_cardiac_ultrasound_status,
+            lab_ecg_status,
+            lab_chest_xray_status,
+            lab_lung_function_status,
+            lab_coagulation_status,
+            lab_electrolyte_status,
+            lab_hepatic_renal_function,
+            lab_else,
+            lab_abnormal_description,
+            lab_coronary_angiography,
+            asa_class,
+            cardiac_function_class,
+            airway_difficulty,
+            anesthesia_risk_level,
+            further_diagnosis_plan,
+            chief_complaint,
+            special_risk_notice,
+            agent_relationship,
+            asa_class_suggestion
+        ) VALUES (
+            #{surgeryId},
+            #{height},
+            #{weight},
+            #{hisIsHypertension},
+            #{hisIsChronicBronchitis},
+            #{hisIsOsas},
+            #{hisIsDiabetes},
+            #{hisIsAsthma},
+            #{hisIsStroke},
+            #{hisIsCoronaryHeartDisease},
+            #{hisIsArrhythmia},
+            #{hisIsCopd},
+            #{hisIsPepticUlcer},
+            #{hisIsThyroidDysfunction},
+            #{hisIsHematemesisOrMelena},
+            #{hisOthers},
+            #{longTermMedication},
+            #{medicationNameAndUsage},
+            #{smokeHis},
+            #{drinkHis},
+            #{anesthesiaHis},
+            #{anesthesiaTypeAndAdverseReactionHis},
+            #{anesthesiaSpecialConditionsHis},
+            #{peVitalSignsStatus},
+            #{bloodpresure},
+            #{pePulseRate},
+            #{peSpo2},
+            #{peIsHypertension},
+            #{peIsHypotension},
+            #{peIsTachycardia},
+            #{peIsBradycardia},
+            #{peIsTachypnea},
+            #{peIsFever},
+            #{peConsciousness},
+            #{peIsAuscultationNormal},
+            #{peIsBreathSoundCoarse},
+            #{peIsMoistRales},
+            #{peIsWheezing},
+            #{peIsBreathSoundAsymmetric},
+            #{peIsBreathSoundDiminished},
+            #{peIsHeartMurmur},
+            #{peIsArrhythmia},
+            #{peIsCardiopulmonaryAuscultationNormal},
+            #{peIsMouthOpenLt3cm},
+            #{peIsThyromentalDistanceLt6cm},
+            #{peIsMicrognathia},
+            #{peIsMallampatiGe3},
+            #{peIsDentitionAbnormal},
+            #{peIsLimitedNeckMobility},
+            #{peIsPunctureSiteNormal},
+            #{peIsPunctureSiteInfected},
+            #{peIsPunctureSiteUlcerated},
+            #{peIsSpinalMalformation},
+            #{labBloodRoutineStatus},
+            #{labBloodGasStatus},
+            #{labDynamicEcgStatus},
+            #{labCardiacUltrasoundStatus},
+            #{labEcgStatus},
+            #{labChestXrayStatus},
+            #{labLungFunctionStatus},
+            #{labCoagulationStatus},
+            #{labElectrolyteStatus},
+            #{labHepaticRenalFunction},
+            #{labElse},
+            #{labAbnormalDescription},
+            #{labCoronaryAngiography},
+            #{asaClass},
+            #{cardiacFunctionClass},
+            #{airwayDifficulty},
+            #{anesthesiaRiskLevel},
+            #{furtherDiagnosisPlan},
+            #{chiefComplaint},
+            #{specialRiskNotice},
+            #{agentRelationship},
+            #{asaClassSuggestion}
+        )
+    </insert>
+
+</mapper>

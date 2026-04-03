@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.medical.mapper.WaveformMapper">
+
+    <select id="getWaveformData" resultType="com.medical.pojo.DTO.WaveformDTO">
+        WITH treatment_window AS (
+            SELECT
+                t.treatment_information_id,
+                COALESCE(
+                    t.device_bind_time,
+                    (
+                        SELECT MIN(ss.step_time)
+                        FROM surgery_step ss
+                        WHERE ss.treatment_information_id = t.treatment_information_id
+                    ),
+                    t.surgery_start_time
+                ) AS start_time,
+                COALESCE(
+                    t.recovery_end_time,
+                    (
+                        SELECT MAX(wp2.time)
+                        FROM waveform_parameter wp2
+                        WHERE wp2.treatment_information_id = t.treatment_information_id
+                    )
+                ) AS end_time
+            FROM treatment_information t
+            WHERE t.treatment_information_id = #{treatmentInformationId}
+        )
+        SELECT
+            DATE_TRUNC('hour', wp.time) + INTERVAL '5 minute' * FLOOR(EXTRACT(EPOCH FROM wp.time - DATE_TRUNC('hour', wp.time)) / 300) AS time,
+            wp.parameter_id AS parameterId,
+            AVG(wp.value) AS value
+        FROM waveform_parameter wp
+        JOIN treatment_window tw ON tw.treatment_information_id = wp.treatment_information_id
+        WHERE wp.treatment_information_id = #{treatmentInformationId}
+          AND (tw.start_time IS NULL OR wp.time >= tw.start_time)
+          AND (tw.end_time IS NULL OR wp.time &lt;= tw.end_time)
+        GROUP BY DATE_TRUNC('hour', wp.time) + INTERVAL '5 minute' * FLOOR(EXTRACT(EPOCH FROM wp.time - DATE_TRUNC('hour', wp.time)) / 300), wp.parameter_id
+        ORDER BY time, parameterId
+    </select>
+
+</mapper>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.medical.mapper.PatientMapper">
+
+    <!-- 定义映射规则 -->
+    <resultMap id="PartialPatientResultMap" type="com.medical.pojo.DTO.PatientDTO">
+        <id property="patientId" column="patient_id" />
+        <result property="name" column="name" />
+        <result property="gender" column="gender" />
+        <result property="age" column="age" />
+        <result property="isSoldier" column="is_soldier" />
+         <result property="idCardNumber" column="id_card_number" />
+        <result property="isEmergency" column="is_emergency" />
+        <!-- 其他字段不需要映射 -->
+    </resultMap>
+
+    <!-- 对应接口的方法 findById -->
+    <select id="findById" resultMap="PartialPatientResultMap">
+                SELECT p.patient_id,
+                             p.name,
+                             p.gender,
+                             p.age,
+                         p.id_card_number,
+                             t.is_emergency AS is_emergency,
+                             p.is_soldier AS is_soldier
+        FROM treatment_information t
+                 JOIN patient p ON t.patient_id = p.patient_id
+        WHERE t.treatment_information_id = #{id}
+    </select>
+
+    <!-- 新增患者并返回生成的主键 ID -->
+    <insert id="add" parameterType="com.medical.pojo.Patient">
+        <selectKey keyProperty="patientId" resultType="int" order="BEFORE">
+            SELECT nextval(pg_get_serial_sequence('patient', 'patient_id'))
+        </selectKey>
+        INSERT INTO patient (patient_id, name, gender, age, is_soldier, id_card_number)
+        VALUES (#{patientId}, #{name}, #{gender}, #{age}, #{isSoldier}, #{idCardNumber});
+    </insert>
+
+
+
+
+</mapper>

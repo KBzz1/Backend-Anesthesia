@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.medical.mapper.SurgeryMapper">
+
+
+    <!-- 创建诊疗记录时同步写入前端提供的术式/麻醉方式 -->
+    <insert id="addRecord" parameterType="com.medical.pojo.Surgery">
+        <selectKey keyProperty="surgeryId" resultType="long" order="AFTER">
+            SELECT currval(pg_get_serial_sequence('treatment_information', 'treatment_information_id'))
+        </selectKey>
+        INSERT INTO treatment_information (
+            patient_id,
+            surgery_method,
+            other_surgery_method,
+            anesthesia_method
+        ) VALUES (
+            #{patientId},
+            #{surgeryMethod},
+            #{otherSurgeryMethod},
+            #{anesthesiaMethod}
+        );
+    </insert>
+
+
+</mapper>
