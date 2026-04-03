@@ -1,0 +1,16 @@
+.backup/
+.codex
+.env
+.venv-tests/
+backups/
+reports/
+Backend-Anesthesia.localbak/
+
+*.log
+*.lck
+
+**/.m2-local/
+**/target/
+**/app.log
+
+.DS_Store

@@ -1,0 +1,185 @@
+name: anesthesia
+
+services:
+  anesthesia-cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: anesthesia-cloudflared
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command:
+      - tunnel
+      - --no-autoupdate
+      - run
+      - --token
+      - ${ANESTHESIA_CLOUDFLARED_TOKEN:?ANESTHESIA_CLOUDFLARED_TOKEN is required}
+    depends_on:
+      anesthesia-gateway:
+        condition: service_healthy
+    networks:
+      - anesthesia-network
+
+  anesthesia-gateway:
+    image: nginx:1.27-alpine
+    container_name: anesthesia-gateway
+    restart: unless-stopped
+    depends_on:
+      anesthesia-base:
+        condition: service_healthy
+      anesthesia-app:
+        condition: service_healthy
+    ports:
+      - "0.0.0.0:8080:8080"
+    volumes:
+      - ./deploy/nginx/anesthesia.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./deploy/certs/fullchain.pem:/etc/nginx/certs/fullchain.pem:ro
+      - ./deploy/certs/privkey.pem:/etc/nginx/certs/privkey.pem:ro
+    networks:
+      - anesthesia-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:8080/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  anesthesia-base:
+    build:
+      context: ./project/project
+      dockerfile: Dockerfile
+    image: anesthesia-base:latest
+    container_name: anesthesia-base
+    restart: unless-stopped
+    expose:
+      - "8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://anesthesia-postgres:5433/anesthesia
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: medical310
+      SPRING_DATA_REDIS_HOST: anesthesia-redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_DATABASE: 0
+      MQTT_BROKER: tcp://anesthesia-mqtt:1883
+      MQTT_USERNAME: 310
+      MQTT_PASSWORD: medical310
+      MQTT_CLIENT_ID: medical
+    depends_on:
+      anesthesia-postgres:
+        condition: service_healthy
+      anesthesia-redis:
+        condition: service_healthy
+      anesthesia-mqtt:
+        condition: service_healthy
+    networks:
+      - anesthesia-network
+    healthcheck:
+      test: ["CMD-SHELL", "ps | grep -q '[j]ava'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  anesthesia-app:
+    build:
+      context: ./Backend-Anesthesia/project
+      dockerfile: Dockerfile
+    image: anesthesia-app:latest
+    container_name: anesthesia-app
+    restart: unless-stopped
+    expose:
+      - "8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://anesthesia-postgres:5433/anesthesia
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: medical310
+      STOMP_SERVER_URL: ws://anesthesia-base:8080/ws
+      DEVICE_BINDING_URL: http://anesthesia-base:8080/device/binding/device/
+      LOGGING_FILE_PATH: /app/logs
+    volumes:
+      - anesthesia_app_logs:/app/logs
+    depends_on:
+      anesthesia-postgres:
+        condition: service_healthy
+      anesthesia-base:
+        condition: service_healthy
+    networks:
+      - anesthesia-network
+    healthcheck:
+      test: ["CMD-SHELL", "ps | grep -q '[j]ava'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  anesthesia-postgres:
+    image: postgres:17-alpine
+    container_name: anesthesia-postgres
+    restart: unless-stopped
+    command: ["postgres", "-c", "port=5433"]
+    ports:
+      - "0.0.0.0:5432:5433"
+    environment:
+      POSTGRES_DB: anesthesia
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: medical310
+    volumes:
+      - anesthesia_postgres_data:/var/lib/postgresql/data
+    networks:
+      - anesthesia-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d anesthesia -p 5433"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  anesthesia-redis:
+    image: redis:7.4-alpine
+    container_name: anesthesia-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    expose:
+      - "6379"
+    volumes:
+      - anesthesia_redis_data:/data
+    networks:
+      - anesthesia-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  anesthesia-mqtt:
+    image: eclipse-mosquitto:2.0
+    container_name: anesthesia-mqtt
+    restart: unless-stopped
+    expose:
+      - "1883"
+    volumes:
+      - ./deploy/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - anesthesia_mqtt_data:/mosquitto/data
+      - anesthesia_mqtt_log:/mosquitto/log
+    networks:
+      - anesthesia-network
+    healthcheck:
+      test: ["CMD-SHELL", "ps | grep -q '[m]osquitto'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  anesthesia_postgres_data:
+    driver: local
+  anesthesia_redis_data:
+    driver: local
+  anesthesia_mqtt_data:
+    driver: local
+  anesthesia_mqtt_log:
+    driver: local
+  anesthesia_app_logs:
+    driver: local
+
+networks:
+  anesthesia-network:
+    driver: bridge

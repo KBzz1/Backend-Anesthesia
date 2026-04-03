@@ -1,0 +1,44 @@
+services:
+  anesthesia-base:
+    build:
+      context: ./project/project
+      dockerfile: Dockerfile.dev
+    image: anesthesia-base:hot
+    command:
+      - sh
+      - -lc
+      - mvn -DskipTests compile spring-boot:run -Dspring-boot.run.profiles=docker
+    environment:
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: "2s"
+      SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: "1s"
+      MAVEN_OPTS: -Dmaven.repo.local=/root/.m2/repository
+    volumes:
+      - ./project/project:/workspace
+      - anesthesia_base_m2:/root/.m2
+
+  anesthesia-app:
+    build:
+      context: ./Backend-Anesthesia/project
+      dockerfile: Dockerfile.dev
+    image: anesthesia-app:hot
+    command:
+      - sh
+      - -lc
+      - mvn -DskipTests compile spring-boot:run -Dspring-boot.run.profiles=docker
+    environment:
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: "2s"
+      SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: "1s"
+      MAVEN_OPTS: -Dmaven.repo.local=/root/.m2/repository
+      LOGGING_FILE_PATH: /app/logs
+    volumes:
+      - ./Backend-Anesthesia/project:/workspace
+      - anesthesia_app_m2:/root/.m2
+      - anesthesia_app_logs:/app/logs
+
+volumes:
+  anesthesia_base_m2:
+    driver: local
+  anesthesia_app_m2:
+    driver: local

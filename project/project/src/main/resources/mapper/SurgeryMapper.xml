@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.medical.mapper.SurgeryMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="SurgeryResultMap" type="com.medical.pojo.Surgery">
+        <id property="surgeryId" column="treatment_information_id"/>
+        <result property="patientId" column="patient_id"/>
+        <result property="isEmergency" column="is_emergency"/>
+        <result property="isPaid" column="is_paid"/>
+        <result property="surgeryMethod" column="surgery_method"/>
+    </resultMap>
+
+    <!-- 查询手术记录 -->
+    <select id="getRecord" parameterType="long" resultMap="SurgeryResultMap">
+        SELECT
+            treatment_information_id,
+            patient_id,
+            is_emergency,
+            is_paid,
+            surgery_method
+        FROM treatment_information
+        WHERE treatment_information_id = #{id}
+    </select>
+
+
+    <insert id="addRecord" parameterType="com.medical.pojo.Surgery">
+        <selectKey keyProperty="surgeryId" resultType="long" order="AFTER">
+            SELECT currval(pg_get_serial_sequence('treatment_information', 'treatment_information_id'))
+        </selectKey>
+        INSERT INTO treatment_information (patient_id)
+        VALUES (#{patientId});
+    </insert>
+
+    <!-- 更新手术预约时间 -->
+    <update id="updateScheduleTime">
+        UPDATE treatment_information
+        SET appointment_request_time = #{appointmentRequestTime},
+            scheduled_surgery_time = #{scheduledSurgeryTime},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE treatment_information_id = #{surgeryId}
+    </update>
+
+    <!-- 更新设备配对时间 -->
+    <update id="updateDeviceBindTime">
+        UPDATE treatment_information
+        SET device_bind_time = #{deviceBindTime},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE treatment_information_id = #{surgeryId}
+    </update>
+
+    <!-- 更新手术开始时间 -->
+    <update id="updateSurgeryStartTime">
+        UPDATE treatment_information
+        SET surgery_start_time = #{surgeryStartTime},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE treatment_information_id = #{surgeryId}
+    </update>
+    <!-- 更新手术结束时间 -->
+    <update id="updateSurgeryEndTime">
+        UPDATE treatment_information
+        SET surgery_end_time = #{surgeryEndTime},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE treatment_information_id = #{surgeryId}
+    </update>
+    <!-- 更新恢复结束时间 -->
+    <update id="updateRecoveryEndTime">
+        UPDATE treatment_information
+        SET recovery_end_time = #{recoveryEndTime},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE treatment_information_id = #{surgeryId}
+    </update>
+
+    <!-- 校验单个 treatment_information_id 是否存在 -->
+    <select id="existsBySurgeryId" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1
+            FROM treatment_information
+            WHERE treatment_information_id = #{id}
+        )
+    </select>
+
+
+</mapper>

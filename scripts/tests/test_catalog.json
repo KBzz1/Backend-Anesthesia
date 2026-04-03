@@ -1,0 +1,54 @@
+{
+  "base_url": "https://anesthesia.kbzz1.top:8080",
+  "modules": {
+    "patients": [
+      "GET /patients/{surgeryId}",
+      "POST /patients/status",
+      "GET /patients/status/{surgeryId}",
+      "GET /patients/status/statusCode/{statusCode}",
+      "GET /patients/status/statistics",
+      "DELETE /patients/status/{surgeryId}"
+    ],
+    "queue": [
+      "GET /queue/check/{surgeryId}",
+      "PUT /queue/appointment",
+      "POST /queue/appointment/check",
+      "POST /queue/register/{surgeryId}",
+      "POST /queue/miss/{surgeryId}"
+    ],
+    "device": [
+      "POST /device/binding",
+      "GET /device/binding/device/{deviceId}",
+      "GET /device/binding/patient/{surgeryId}",
+      "GET /device/binding/statistics",
+      "DELETE /device/binding/device/{deviceId}",
+      "DELETE /device/binding/patient/{surgeryId}"
+    ],
+    "anesthesia_app": [
+      "POST /auth/signin",
+      "GET /staff/information/{staffId}",
+      "GET /surgeryArea/{surgeryId}",
+      "POST /surgeryArea/anesthesiologist",
+      "POST /surgeryArea/anesthesiologist2",
+      "POST /surgeryArea/record/{surgeryId}",
+      "POST /recovery",
+      "POST /recovery/out",
+      "POST /rer",
+      "GET /ARS/getPatients",
+      "GET /ARS/{id}",
+      "GET /waveform/{id}",
+      "POST /paa"
+    ],
+    "websocket": [
+      "WSS /ws handshake",
+      "SUBSCRIBE /data/area/{areaId}",
+      "SEND /data/area/call",
+      "SUBSCRIBE /data/patients/status/{statusCode}",
+      "SUBSCRIBE /data/patients/status/statistics",
+      "SUBSCRIBE /data/sub/{deviceId}",
+      "SUBSCRIBE /data/sub/all",
+      "SEND /data/pub/{deviceId}",
+      "reconnect and re-subscribe"
+    ]
+  }
+}

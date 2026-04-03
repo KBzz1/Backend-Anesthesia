@@ -1,0 +1,946 @@
+字段名 (Field)	备注 (Remark)	数据类型 (PostgreSQL Type)
+patient_id	患者唯一标识（主键，自增）	INTEGER
+name	患者姓名	VARCHAR(100)
+gender	性别（男 / 女）	VARCHAR(10)
+age	年龄	INTEGER
+birth_year	出生年份	INTEGER
+ID_card_number	身份证号	INTEGER
+contact	联系电话	INTEGER
+is_soldier	是否为军人	BOOLEAN DEFAULT FALSE
+
+-- 患者信息表
+CREATE TABLE IF NOT EXISTS public.patient (
+    patient_id SERIAL PRIMARY KEY,             -- 患者唯一标识
+    name VARCHAR(100) NOT NULL,                -- 患者姓名
+    gender VARCHAR(10),                        -- 性别（男 / 女）
+    age INT,                                   -- 年龄
+    birth_year INT,                            -- 出生年份
+    id_card_number VARCHAR(18),                -- 身份证号
+    contact VARCHAR(20),                       -- 联系电话
+    is_soldier BOOLEAN DEFAULT FALSE           -- 是否为军人
+);
+
+字段名 (Field)	备注 (Remark)	数据类型 (PostgreSQL Type)
+status_id	主键，自增序列，唯一标识每条状态记录	integer
+treatment_information_id	外键，关联到 treatment_information 表的主键	integer
+patient_status	患者当前状态，使用 patient_status_enum 枚举类型	patient_status_enum
+status_time	状态更新时间，默认是当前时间戳	timestamp without time zone
+
+
+CREATE UNLOGGED TABLE IF NOT EXISTS public.patient_status
+(
+    -- 主键，自增序列，唯一标识每条状态记录
+    status_id integer NOT NULL DEFAULT nextval('patient_status_status_id_seq'::regclass),
+    
+    -- 外键，关联到治疗信息表的主键
+    treatment_information_id integer NOT NULL,
+    
+    -- 患者当前状态（使用 patient_status_enum 枚举类型）
+    patient_status public.patient_status_enum,
+    
+    -- 状态时间，记录状态更新时间，默认当前时间
+    status_time timestamp without time zone DEFAULT now(),
+    
+    -- 主键约束
+    CONSTRAINT patient_status_pkey PRIMARY KEY (status_id),
+    
+    -- 外键约束：关联到 treatment_information 表的主键
+    CONSTRAINT fk_treatment_information FOREIGN KEY (treatment_information_id)
+        REFERENCES public.treatment_information (treatment_information_id)
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+)
+TABLESPACE pg_default;
+
+-- 设置表的所有者
+ALTER TABLE IF EXISTS public.patient_status
+    OWNER TO postgres;
+
+-- ==========================================
+-- 索引部分
+-- ==========================================
+
+-- 索引 1：按患者状态字段建立索引，加快状态筛选查询
+CREATE INDEX IF NOT EXISTS idx_patient_status_enum
+    ON public.patient_status USING btree
+    (patient_status ASC NULLS LAST)
+    WITH (fillfactor=100, deduplicate_items=True)
+    TABLESPACE pg_default;
+
+-- 索引 2：按治疗信息 ID 建立索引，加快关联查询
+CREATE INDEX IF NOT EXISTS idx_patient_status_treatment_information_id
+    ON public.patient_status USING btree
+    (treatment_information_id ASC NULLS LAST)
+    WITH (fillfactor=100, deduplicate_items=True)
+    TABLESPACE pg_default;
+    
+-- ==========================================
+-- 创建每日自动清理任务
+-- 功能：每天 00:00 清理 8 小时前的缓存数据
+-- ==========================================
+SELECT cron.schedule(
+    'cleanup_patient_status',    -- 任务名（唯一）
+    '0 0 * * *',                 -- 每天午夜执行
+    $$DELETE FROM public.patient_status
+      WHERE status_time < NOW() - INTERVAL '8 hours';$$
+);
+
+CREATE TYPE public.patient_status_enum AS ENUM
+    ('waiting', 'calling', 'preparing', 'missed', 'surgery', 'recovering', 'completed', 'intransit', 'catheter_inserted', 'treatment_area', 'surgery_started', 'surgery_ended', 'discharged', 'patient_exit', 'waiting_for_device', 'waiting_for_prep', 'calling_for_device', 'calling_for_prep', 'missed_device', 'missed_prep', 'registered');
+
+  11.14：patient_status_enum类新增waiting_for_device，waiting_for_prep，calling_for_device，calling_for_prep，missed_device，missed_prep，registered
+
+
+
+字段名	备注	数据类型
+recovery_room_record_id	主键ID	BIGSERIAL
+treatment_information_id	外键（关联治疗信息）	BIGINT
+crystalloid_ml	晶体液(mL)	INTEGER
+rbc_u	红细胞单位	INTEGER
+platelet_u	血小板单位	INTEGER
+plasma_u	血浆单位	INTEGER
+cryoprecipitate_u	冷沉淀单位	INTEGER
+glucose_ml	葡萄糖(mL)	INTEGER
+albumin_g	白蛋白(g)	INTEGER
+na_hco3_5_percent_ml	5%碳酸氢钠(mL)	INTEGER
+gs_ml	G.S(mL)	INTEGER
+colloid_ml	胶体液(mL)	INTEGER
+other_ml	其他(mL)	INTEGER
+suction_ecg_monitor	吸引/心电监护	BOOLEAN
+nebulization	雾化	BOOLEAN
+oral_care	口腔护理	BOOLEAN
+venous_catheter_care	静脉导管护理	BOOLEAN
+st_segment_monitor	ST段监测	BOOLEAN
+fluid_warming	输液加温	BOOLEAN
+auscultation	听诊	BOOLEAN
+airbag_pressure	气囊压力	BOOLEAN
+mask_oxygen	面罩吸氧	BOOLEAN
+airway_patency	气道通畅	BOOLEAN
+bp	血压(mmHg)	INTEGER
+p_bpm	脉搏(bpm)	INTEGER
+r_bpm	呼吸频率(bpm)	INTEGER
+spo2	血氧饱和度(%)	INTEGER
+anesthesia_satisfaction	麻醉满意度	VARCHAR(20)
+vas_score	VAS评分	INTEGER
+steward_score	Steward苏醒评分	INTEGER
+recovery_conscious	是否恢复躁动	BOOLEAN
+awakening_level	清醒程度	VARCHAR(50)
+consciousness_orientation	时间定向力	BOOLEAN
+spatial_orientation	空间定向	BOOLEAN
+calculation_ability	计算能力	BOOLEAN
+memory	记忆力	BOOLEAN
+skin_condition	皮肤粘膜	VARCHAR(50)
+limb_activity	肢体活动度	VARCHAR(50)
+airway_reflex	呼吸道通畅情况	VARCHAR(50)
+pupil_equal	瞳孔是否等大	BOOLEAN
+pupil_light_reflex	瞳孔光反射	VARCHAR(50)
+respiration_vt	呼吸_vt	INTEGER
+respiration_sound	呼吸音	VARCHAR(50)
+muscle_strength	肌力	INTEGER
+top_ratio	TOP（T4/T1)%	INTEGER
+reflex	反射	VARCHAR(50)
+sound	声嘶	VARCHAR(50)
+self_report_ability	自我报告能力	VARCHAR(50)
+
+
+-- 麻醉恢复室记录表
+CREATE TABLE IF NOT EXISTS public.recovery_room_record (
+    recovery_room_record_id BIGSERIAL PRIMARY KEY,                -- 主键ID
+    treatment_information_id BIGINT,                             -- 外键（关联治疗信息）
+
+    -- 输液及用血情况
+    crystalloid_ml INTEGER,                                       -- 晶体液(mL)
+    rbc_u INTEGER,                                                -- 红细胞单位
+    platelet_u INTEGER,                                           -- 血小板单位
+    plasma_u INTEGER,                                             -- 血浆单位
+    cryoprecipitate_u INTEGER,                                    -- 冷沉淀单位
+    glucose_ml INTEGER,                                           -- 葡萄糖(mL)
+    albumin_g INTEGER,                                            -- 白蛋白(g)
+    na_hco3_5_percent_ml INTEGER,                                 -- 5%碳酸氢钠(mL)
+    gs_ml INTEGER,                                                -- 胶体液(mL)
+    colloid_ml INTEGER,                                           -- 胶体液(mL)
+    other_ml INTEGER,                                             -- 其他(mL)
+
+    -- 护理与监测操作
+    suction_ecg_monitor BOOLEAN DEFAULT FALSE,                   -- 吸引/心电监护
+    nebulization BOOLEAN DEFAULT FALSE,                           -- 雾化
+    oral_care BOOLEAN DEFAULT FALSE,                              -- 口腔护理
+    venous_catheter_care BOOLEAN DEFAULT FALSE,                  -- 静脉导管护理
+    st_segment_monitor BOOLEAN DEFAULT FALSE,                    -- ST段监测
+    fluid_warming BOOLEAN DEFAULT FALSE,                          -- 输液加温
+    auscultation BOOLEAN DEFAULT FALSE,                           -- 听诊
+    airbag_pressure BOOLEAN DEFAULT FALSE,                        -- 气囊压力
+    mask_oxygen BOOLEAN DEFAULT FALSE,                             -- 面罩吸氧
+    airway_patency BOOLEAN DEFAULT FALSE,                          -- 气道通畅
+
+    -- 生命体征
+    bp INTEGER,                                                    -- 血压(mmHg)
+    p_bpm INTEGER,                                                 -- 脉搏(bpm)
+    r_bpm INTEGER,                                                 -- 呼吸频率(bpm)
+    spo2 INTEGER,                                                  -- 血氧饱和度(%)
+
+    -- 麻醉及镇痛评分
+    anesthesia_satisfaction VARCHAR(20),                          -- 麻醉满意度
+    vas_score INTEGER,                                             -- VAS评分
+    steward_score INTEGER,                                         -- Steward评分
+
+    -- 恢复情况及意识评估
+    recovery_conscious BOOLEAN,                                    -- 是否清醒
+    awakening_level VARCHAR(50),                                   -- 醒后状态
+    consciousness_orientation BOOLEAN,                             -- 定向力
+    spatial_orientation BOOLEAN,                                   -- 空间定向
+    calculation_ability BOOLEAN,                                   -- 计算能力
+    memory BOOLEAN,                                                -- 记忆力
+
+    -- 皮肤及肢体
+    skin_condition VARCHAR(50),                                    -- 皮肤状况
+    limb_activity VARCHAR(50),                                     -- 四肢活动情况
+
+    -- 气道及瞳孔
+    airway_reflex VARCHAR(50),                                     -- 气道反射
+    pupil_equal BOOLEAN,                                           -- 瞳孔是否等大
+    pupil_light_reflex VARCHAR(50),                                -- 瞳孔光反射
+
+    -- 呼吸及肌力
+    respiration_vt INTEGER,                                        -- 呼吸潮气量
+    respiration_sound VARCHAR(50),                                 -- 呼吸音
+    muscle_strength INTEGER,                                       -- 肌力
+    top_ratio INTEGER,                                             -- 头高比
+
+    -- 反射及自我报告
+    reflex VARCHAR(50),                                            -- 反射
+    sound VARCHAR(50),                                             -- 声音
+    self_report_ability VARCHAR(50),                               -- 自我报告能力
+
+    -- 时间戳
+    time_monitor TIMESTAMP,                                        -- 监测时间
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,               -- 创建时间
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,               -- 更新时间
+
+    -- 外键约束
+    CONSTRAINT fk_recovery_treatment_information
+        FOREIGN KEY (treatment_information_id)
+        REFERENCES public.treatment_information (treatment_information_id)
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+);
+
+COMMENT ON TABLE public.recovery_room_record IS '麻醉恢复室记录表';
+
+
+
+字段名 (Field)	备注 (Remark)	数据格式
+paa_id	主键	BIGINT，自增
+treatment_information_id	外键（指向 treatment_information 表）	BIGINT
+chief_complaint	患者主诉	TEXT
+height	身高（cm）	NUMERIC(5,2)
+weight	体重（kg）	NUMERIC(5,2)
+his_is_hypertension	高血压历史	BOOLEAN DEFAULT FALSE
+his_is_chronic_bronchitis	慢性支气管炎历史	BOOLEAN DEFAULT FALSE
+his_is_osas	睡眠呼吸暂停综合征历史	BOOLEAN DEFAULT FALSE
+his_is_diabetes	糖尿病历史	BOOLEAN DEFAULT FALSE
+his_is_asthma	哮喘历史	BOOLEAN DEFAULT FALSE
+his_is_stroke	中风历史	BOOLEAN DEFAULT FALSE
+his_is_coronary_heart_disease	冠心病历史	BOOLEAN DEFAULT FALSE
+his_is_arrhythmia	心律失常历史	BOOLEAN DEFAULT FALSE
+his_is_copd	慢性阻塞性肺病历史	BOOLEAN DEFAULT FALSE
+his_is_peptic_ulcer	胃溃疡历史	BOOLEAN DEFAULT FALSE
+his_is_thyroid_dysfunction	甲状腺功能障碍历史	BOOLEAN DEFAULT FALSE
+his_is_hematemesis_or_melena	是否呕血黑便	BOOLEAN DEFAULT FALSE
+his_others	其他病史	TEXT
+is_long_term_medication	是否长期用药	BOOLEAN DEFAULT FALSE
+medication_name_and_usage	药物名称及用法	TEXT
+smoke_his	吸烟历史	'never'，'former'，'current'
+drink_his	饮酒历史	'never'，'former'，'current'
+is_anesthesia_his	麻醉史	BOOLEAN DEFAULT FALSE
+anesthesia_type_and_adverse_reaction_his	麻醉类型及不良反应	TEXT
+anesthesia_special_conditions_his	麻醉特殊情况	TEXT
+pe_vital_signs_status	体检生命体征状态	VARCHAR(50)
+pe_bp_systolic	收缩压	SMALLINT
+pe_bp_diastolic	舒张压	SMALLINT
+pe_pulse_rate	脉搏率	SMALLINT
+pe_spo2	血氧饱和度	SMALLINT
+pe_is_hypertension	是否高血压	BOOLEAN DEFAULT FALSE
+pe_is_hypotension	是否低血压	BOOLEAN DEFAULT FALSE
+pe_is_tachycardia	是否心动过速	BOOLEAN DEFAULT FALSE
+pe_is_bradycardia	是否心动过缓	BOOLEAN DEFAULT FALSE
+pe_is_tachypnea	是否呼吸急促	BOOLEAN DEFAULT FALSE
+pe_is_fever	是否发热	BOOLEAN DEFAULT FALSE
+pe_consciousness	意识状态	VARCHAR(50)
+pe_is_auscultation_normal	听诊是否正常	BOOLEAN DEFAULT FALSE
+pe_is_breath_sound_coarse	呼吸音是否粗	BOOLEAN DEFAULT FALSE
+pe_is_moist_rales	是否有湿啰音	BOOLEAN DEFAULT FALSE
+pe_is_wheezing	是否有喘鸣音	BOOLEAN DEFAULT FALSE
+pe_is_breath_sound_asymmetric	呼吸音是否不对称	BOOLEAN DEFAULT FALSE
+pe_is_breath_sound_diminished	呼吸音是否减弱	BOOLEAN DEFAULT FALSE
+pe_is_heart_murmur	是否有心脏杂音	BOOLEAN DEFAULT FALSE
+pe_is_arrhythmia	是否有心律失常	BOOLEAN DEFAULT FALSE
+pe_is_cardiopulmonary_auscultation_normal	心肺听诊是否正常	BOOLEAN DEFAULT FALSE
+pe_is_mouth_open_lt_3cm	口腔开口小于3cm	BOOLEAN DEFAULT FALSE
+pe_is_thyromental_distance_lt_6cm	甲下颌距离小于6cm	BOOLEAN DEFAULT FALSE
+pe_is_micrognathia	是否有小下颌	BOOLEAN DEFAULT FALSE
+pe_is_mallampati_ge_3	Mallampati ≥ 3	BOOLEAN DEFAULT FALSE
+pe_is_dentition_abnormal	是否有异常牙齿	BOOLEAN DEFAULT FALSE
+pe_is_limited_neck_mobility	是否有颈部活动受限	BOOLEAN DEFAULT FALSE
+pe_is_puncture_site_normal	穿刺部位是否正常	BOOLEAN DEFAULT FALSE
+pe_is_puncture_site_infected	穿刺部位是否感染	BOOLEAN DEFAULT FALSE
+pe_is_puncture_site_ulcerated	穿刺部位是否溃疡	BOOLEAN DEFAULT FALSE
+pe_is_spinal_malformation	是否有脊柱畸形	BOOLEAN DEFAULT FALSE
+lab_blood_routine_status	血常规检查状态	VARCHAR(50)
+lab_ecg_status	心电图状态	VARCHAR(50)
+lab_chest_xray_status	胸部X光状态	VARCHAR(50)
+lab_liver_function_status	肝功能状态	VARCHAR(50)
+lab_kidney_function_status	肾功能状态	VARCHAR(50)
+lab_lung_function_status	肺功能状态	VARCHAR(50)
+lab_thyroid_function_status	甲状腺功能状态	VARCHAR(50)
+lab_coagulation_status	凝血功能状态	VARCHAR(50)
+lab_electrolyte_status	电解质状态	VARCHAR(50)
+lab_blood_glucose_status	血糖检查状态	VARCHAR(50)
+lab_crossmatch_status	交叉配血检查状态	VARCHAR(50)
+lab_blood_gas_status	血气检查状态	VARCHAR(50)
+lab_dynamic_ecg_status	动态心电图状态	VARCHAR(50)
+lab_cardiac_ultrasound_status	心脏超声状态	VARCHAR(50)
+lab_abnormal_description	检查异常描述	TEXT
+asa_class_suggestion	建议ASA分级	'I', 'II', 'III', 'IV', 'V', 'E'
+asa_class	ASA 分级	'I', 'II', 'III', 'IV', 'V', 'E'
+cardiac_function_class	心功能分级	'I', 'II', 'III', 'IV'
+airway_difficulty	气道困难情况	'none', 'suspected', 'intubation_difficult', 'ventilation_difficult'
+anesthesia_risk_level	麻醉风险等级	'low', 'medium', 'high'
+further_diagnosis_plan	进一步诊断计划	'feasible', 'not_feasible', 'defer', 'need_further_treatment'
+created_at	创建时间	TIMESTAMP
+updated_at	更新时间	TIMESTAMP
+is_postoperative_analgesia	是否同意术后镇痛	BOOLEAN DEFAULT FALSE
+analgesia_method	镇痛方式	VARCHAR(100)
+special_risk_notice	特殊风险交代	TEXT
+agent_relationship	代理人与患者关系	VARCHAR(50)
+anesthesia_plan_suggestion	建议麻醉方案	VARCHAR(100)
+lab_hepatic_renal_function	肝肾功能	VARCHAR(50)
+lab_else	其他（实验室检查）	VARCHAR(50)
+lab_coronary_angiography	冠状造影	VARCHAR(50)
+pe_is_airway_normal	气道评估	BOOLEAN DEFAULT FALSE
+pe_bp	血压（120/85）	VARCHAR(50)
+
+-- 创建表格，如果表格不存在
+CREATE TABLE IF NOT EXISTS public.paa_information
+(
+    -- 主键ID，自动递增
+    paa_id bigint NOT NULL DEFAULT nextval('paa_information_paa_id_seq'::regclass),
+    
+    -- 关联治疗信息ID
+    treatment_information_id bigint NOT NULL,
+    
+    -- 身高（单位：厘米，保留两位小数）
+    height numeric(5,2),
+    
+    -- 体重（单位：公斤，保留两位小数）
+    weight numeric(5,2),
+    
+    -- 既往病史
+    his_is_hypertension boolean DEFAULT false, -- 高血压
+    his_is_chronic_bronchitis boolean DEFAULT false, -- 慢性支气管炎
+    his_is_osas boolean DEFAULT false, -- 阻塞性睡眠呼吸暂停综合症
+    his_is_diabetes boolean DEFAULT false, -- 糖尿病
+    his_is_asthma boolean DEFAULT false, -- 哮喘
+    his_is_stroke boolean DEFAULT false, -- 中风
+    his_is_coronary_heart_disease boolean DEFAULT false, -- 冠心病
+    his_is_arrhythmia boolean DEFAULT false, -- 心律失常
+    his_is_copd boolean DEFAULT false, -- 慢性阻塞性肺病
+    his_is_peptic_ulcer boolean DEFAULT false, -- 消化性溃疡
+    his_is_thyroid_dysfunction boolean DEFAULT false, -- 甲状腺功能障碍
+    his_others text COLLATE pg_catalog."default", -- 其他病史
+    
+    -- 是否长期服药
+    is_long_term_medication boolean DEFAULT false,
+    medication_name_and_usage text COLLATE pg_catalog."default", -- 药物名称与使用情况
+    
+    -- 吸烟史
+    smoke_his character varying(20) COLLATE pg_catalog."default",
+    
+    -- 饮酒史
+    drink_his character varying(20) COLLATE pg_catalog."default",
+    
+    -- 麻醉史
+    is_anesthesia_his boolean DEFAULT false,
+    anesthesia_type_and_adverse_reaction_his text COLLATE pg_catalog."default", -- 麻醉类型及不良反应
+    anesthesia_special_conditions_his text COLLATE pg_catalog."default", -- 麻醉特殊情况
+    
+    -- 体检生命体征
+    pe_vital_signs_status character varying(50) COLLATE pg_catalog."default",
+    pe_bp_systolic smallint, -- 收缩压
+    pe_bp_diastolic smallint, -- 舒张压
+    pe_pulse_rate smallint, -- 脉搏
+    pe_spo2 smallint, -- 血氧饱和度
+    
+    -- 体检其他情况
+    pe_is_hypertension boolean DEFAULT false, -- 高血压
+    pe_is_hypotension boolean DEFAULT false, -- 低血压
+    pe_is_tachycardia boolean DEFAULT false, -- 心动过速
+    pe_is_bradycardia boolean DEFAULT false, -- 心动过缓
+    pe_is_tachypnea boolean DEFAULT false, -- 呼吸急促
+    pe_is_fever boolean DEFAULT false, -- 发热
+    
+    -- 意识状态
+    pe_consciousness character varying(50) COLLATE pg_catalog."default",
+    
+    -- 听诊正常
+    pe_is_auscultation_normal boolean DEFAULT true, 
+    
+    -- 呼吸音异常
+    pe_is_breath_sound_coarse boolean DEFAULT false, -- 粗糙音
+    pe_is_moist_rales boolean DEFAULT false, -- 湿性罗音
+    pe_is_wheezing boolean DEFAULT false, -- 喘息
+    pe_is_breath_sound_asymmetric boolean DEFAULT false, -- 呼吸音不对称
+    pe_is_breath_sound_diminished boolean DEFAULT false, -- 呼吸音减弱
+    
+    -- 心脏杂音
+    pe_is_heart_murmur boolean DEFAULT false, -- 心脏杂音
+    
+    -- 心律失常
+    pe_is_arrhythmia boolean DEFAULT false, -- 心律失常
+    
+    -- 心肺听诊正常
+    pe_is_cardiopulmonary_auscultation_normal boolean DEFAULT true,
+    
+    -- 口腔检查
+    pe_is_mouth_open_lt_3cm boolean DEFAULT false, -- 口开小于3cm
+    pe_is_thyromental_distance_lt_6cm boolean DEFAULT false, -- 甲状腺下缘距舌骨小于6cm
+    pe_is_micrognathia boolean DEFAULT false, -- 小下巴
+    pe_is_mallampati_ge_3 boolean DEFAULT false, -- Mallampati评分大于等于3
+    pe_is_dentition_abnormal boolean DEFAULT false, -- 齿列异常
+    pe_is_limited_neck_mobility boolean DEFAULT false, -- 颈部活动受限
+    
+    -- 穿刺部位检查
+    pe_is_puncture_site_normal boolean DEFAULT true, -- 穿刺部位正常
+    pe_is_puncture_site_infected boolean DEFAULT false, -- 穿刺部位感染
+    pe_is_puncture_site_ulcerated boolean DEFAULT false, -- 穿刺部位溃疡
+    
+    -- 脊柱畸形
+    pe_is_spinal_malformation boolean DEFAULT false,
+    
+    -- 实验室检查结果
+    lab_blood_routine_status character varying(50) COLLATE pg_catalog."default", -- 血常规
+    lab_ecg_status character varying(50) COLLATE pg_catalog."default", -- 心电图
+    lab_chest_xray_status character varying(50) COLLATE pg_catalog."default", -- 胸片
+    lab_liver_function_status character varying(50) COLLATE pg_catalog."default", -- 肝功能
+    lab_kidney_function_status character varying(50) COLLATE pg_catalog."default", -- 肾功能
+    lab_lung_function_status character varying(50) COLLATE pg_catalog."default", -- 肺功能
+    lab_thyroid_function_status character varying(50) COLLATE pg_catalog."default", -- 甲状腺功能
+    lab_coagulation_status character varying(50) COLLATE pg_catalog."default", -- 凝血功能
+    lab_electrolyte_status character varying(50) COLLATE pg_catalog."default", -- 电解质
+    lab_blood_glucose_status character varying(50) COLLATE pg_catalog."default", -- 血糖
+    lab_crossmatch_status character varying(50) COLLATE pg_catalog."default", -- 交叉配血
+    lab_blood_gas_status character varying(50) COLLATE pg_catalog."default", -- 血气分析
+    lab_dynamic_ecg_status character varying(50) COLLATE pg_catalog."default", -- 动态心电图
+    lab_cardiac_ultrasound_status character varying(50) COLLATE pg_catalog."default", -- 心脏超声
+    lab_abnormal_description text COLLATE pg_catalog."default", -- 异常描述
+    
+    -- ASA评分
+    asa_class character varying(5) COLLATE pg_catalog."default", -- ASA评分
+    
+    -- 心脏功能评分
+    cardiac_function_class character varying(5) COLLATE pg_catalog."default", -- 心脏功能评分
+    
+    -- 呼吸道难度
+    airway_difficulty character varying(50) COLLATE pg_catalog."default", -- 呼吸道难度
+    
+    -- 麻醉风险等级
+    anesthesia_risk_level character varying(20) COLLATE pg_catalog."default", -- 麻醉风险等级
+    
+    -- 进一步诊断计划
+    further_diagnosis_plan character varying(30) COLLATE pg_catalog."default", -- 进一步诊断计划
+    
+    -- 创建和更新时间
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP, -- 创建时间
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP, -- 更新时间
+    
+    -- 主诉
+    chief_complaint text COLLATE pg_catalog."default",
+    
+    -- 是否进行术后镇痛
+    is_postoperative_analgesia boolean DEFAULT false,
+    
+    -- 镇痛方法
+    analgesia_method character varying(100) COLLATE pg_catalog."default",
+    
+    -- 特殊风险提醒
+    special_risk_notice text COLLATE pg_catalog."default", 
+    
+    -- 代理人关系
+    agent_relationship character varying(50) COLLATE pg_catalog."default",
+    
+    -- 主键约束
+    CONSTRAINT paa_information_pkey PRIMARY KEY (paa_id),
+    
+    -- 外键约束，关联到治疗信息表
+    CONSTRAINT treatment_information_id FOREIGN KEY (treatment_information_id)
+        REFERENCES public.treatment_information (treatment_information_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+        NOT VALID
+)
+TABLESPACE pg_default;
+
+-- 设置表格拥有者为 postgres 用户
+ALTER TABLE IF EXISTS public.paa_information
+    OWNER to postgres;
+
+-- 创建Chief Complaint字段的全文索引（使用PGroonga）
+CREATE INDEX IF NOT EXISTS idx_chief_complaint_pgroonga
+    ON public.paa_information USING pgroonga
+    (chief_complaint COLLATE pg_catalog."default")
+    TABLESPACE pg_default;
+
+-- 创建更新时间触发器
+CREATE OR REPLACE TRIGGER trg_update_timestamp
+    BEFORE UPDATE 
+    ON public.paa_information
+    FOR EACH ROW
+    EXECUTE FUNCTION public.update_modified_time();
+
+医师是否同意麻醉放到了treament_information表里面了
+新增是否呕血黑便his_is_hematemesis_or_melena，ASA分级建议asa_class_suggestion ，建议麻醉方案anesthesia_plan_suggestion
+
+
+
+字段名 (Field)	备注 (Remark)	数据类型 (PostgreSQL Type)
+staff_id	医务人员唯一标识	BIGSERIAL PRIMARY KEY
+department_id	所属科室ID（外键）	BIGINT
+name	姓名	VARCHAR(50)
+gender	性别	ENUM  '男', '女'
+date_of_birth	出生日期	DATE
+position	职务（主任医师、副主任医师、护士长等）	VARCHAR(50)
+title	职称（医生、护士、麻醉师、技师等）	VARCHAR(50)
+phone	联系电话	VARCHAR(20)
+email	邮箱	VARCHAR(100)
+hire_date	入职日期	DATE
+is_active	是否在职	BOOLEAN DEFAULT TRUE
+remark	备注	TEXT
+created_at	创建时间	TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+updated_at	更新时间	TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+signature	电子签名	BYTEA
+
+
+
+字段名 (Field)	备注 (Remark)	数据类型 (PostgreSQL Type)
+treatment_information_id	手术/治疗信息唯一标识	BIGSERIAL PRIMARY KEY
+treatment_information_id	患者ID（外键）	BIGINT
+place_id	手术/检查地点ID（外键）	BIGINT
+surgery_date	手术日期与时间	TIMESTAMP WITHOUT TIME ZONE
+surgery_method	手术方式	ENUM  '胃镜', '肠镜', '人流', '宫腔镜', '诊刮', '电休克', '支气管镜', '其他'
+other_surgery_method	其他手术方式补充说明	TEXT
+anesthesia_method	麻醉方式（如插管麻醉、非插管麻醉）	VARCHAR(20)
+remark	备注	TEXT
+created_at	创建时间	TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+updated_at	更新时间	TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+department	科室名称	VARCHAR(100)
+appointment_date	预约日期	DATE
+appointment_time	预约时间	TIMESTAMP WITHOUT TIME ZONE
+is_doctor_agree_anesthesia	医师是否同意麻醉	BOOLEAN DEFAULT false
+is_paid	是否支付医疗费用	Boolean DEFAULT false
+surgery_start_time	手术开始时间	TIMESTAMP WITHOUT TIME ZONE
+surgery_end_time	手术结束时间	TIMESTAMP WITHOUT TIME ZONE
+recovery_end_time	恢复结束时间（出院时间）	TIMESTAMP WITHOUT TIME ZONE
+
+-- 治疗/手术信息表
+CREATE TABLE IF NOT EXISTS public.treatment_information
+(
+    treatment_information_id bigint NOT NULL DEFAULT nextval('surgical_information_surgical_information_id_seq'::regclass),
+    patient_id bigint NOT NULL,
+    surgery_date timestamp without time zone,
+    other_surgery_method text COLLATE pg_catalog."default",
+    anesthesia_method character varying(20) COLLATE pg_catalog."default",
+    remark text COLLATE pg_catalog."default",
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    department character varying(100) COLLATE pg_catalog."default",
+    appointment_date date,
+    appointment_time timestamp without time zone,
+    place_id bigint,
+    "Is_emergency" boolean NOT NULL DEFAULT false,
+    is_doctor_agree_anesthesia boolean DEFAULT false,
+    is_appointment boolean DEFAULT false,
+    is_paid boolean DEFAULT false,
+    surgery_method character varying(50) COLLATE pg_catalog."default",
+    surgery_start_time timestamp without time zone,
+    surgery_end_time timestamp without time zone,
+    recovery_end_time timestamp without time zone,
+    CONSTRAINT surgical_information_pkey PRIMARY KEY (treatment_information_id),
+    CONSTRAINT fk_treatment_place FOREIGN KEY (place_id)
+        REFERENCES public.place (place_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE SET NULL,
+    CONSTRAINT surgical_information_patient_id_fkey FOREIGN KEY (patient_id)
+        REFERENCES public.patient (patient_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+
+将appointment_time的数据类型由time without time zone 改为timestamp without time zone
+新增is_paid 数据类型Boolean
+
+
+手术信息（主表）建表语句：
+-- auto-generated definition
+create table treatment_information
+(
+    treatment_information_id bigint    default nextval('surgical_information_surgical_information_id_seq'::regclass) not null,
+    patient_id               bigint                                                                                  not null
+        constraint surgical_information_patient_id_fkey
+            references patient,
+    surgery_date             timestamp,
+    other_surgery_method     text,
+    anesthesia_method        varchar(20)
+        constraint surgical_information_anesthesia_method_check
+            check ((anesthesia_method)::text = ANY
+                   ((ARRAY ['插管麻醉'::character varying, '非插管麻醉'::character varying])::text[])),
+    remark                   text,
+    created_at               timestamp default CURRENT_TIMESTAMP,
+    updated_at               timestamp default CURRENT_TIMESTAMP,
+    department               varchar(100),
+    appointment_date         date,
+    appointment_time         time,
+    place_id                 bigint
+        constraint fk_treatment_place
+            references place
+            on delete set null,
+    surgery_method           surgery_method_enum,
+    constraint surgical_information_pkey
+        primary key ()
+);
+
+alter table treatment_information
+    owner to postgres;
+用户信息表建表语句：
+-- auto-generated definition
+create table patient
+(
+    patient_id       serial
+        primary key,
+    name             varchar(100)          not null,
+    gender           varchar(10),
+    age              integer,
+    birth_year       integer,
+    "Is_soldier"     boolean,
+    "ID card number" integer,
+    contact          integer,
+    "Is_emergency"   boolean default false not null
+);
+
+alter table patient
+    owner to postgres;
+麻醉评估表建表语句：
+-- auto-generated definition
+create table paa_information
+(
+    paa_id                                    bigserial
+        primary key,
+    patient_id                                bigint not null,
+    height                                    numeric(5, 2)
+        constraint chk_height
+            check ((height > (0)::numeric) AND (height < (250)::numeric)),
+    weight                                    numeric(5, 2)
+        constraint chk_weight
+            check ((weight > (0)::numeric) AND (weight < (300)::numeric)),
+    chief_complaint                           text,
+    his_is_hypertension                       boolean   default false,
+    his_is_chronic_bronchitis                 boolean   default false,
+    his_is_osas                               boolean   default false,
+    his_is_diabetes                           boolean   default false,
+    his_is_asthma                             boolean   default false,
+    his_is_stroke                             boolean   default false,
+    his_is_coronary_heart_disease             boolean   default false,
+    his_is_arrhythmia                         boolean   default false,
+    his_is_copd                               boolean   default false,
+    his_is_peptic_ulcer                       boolean   default false,
+    his_is_thyroid_dysfunction                boolean   default false,
+    his_others                                text,
+    is_long_term_medication                   boolean   default false,
+    medication_name_and_usage                 text,
+    smoke_his                                 varchar(20)
+        constraint paa_information_smoke_his_check
+            check ((smoke_his)::text = ANY
+                   ((ARRAY ['never'::character varying, 'former'::character varying, 'current'::character varying])::text[]))
+        constraint chk_smoke
+            check ((smoke_his)::text = ANY
+                   ((ARRAY ['never'::character varying, 'former'::character varying, 'current'::character varying])::text[])),
+    drink_his                                 varchar(20)
+        constraint paa_information_drink_his_check
+            check ((drink_his)::text = ANY
+                   ((ARRAY ['never'::character varying, 'former'::character varying, 'current'::character varying])::text[]))
+        constraint chk_drink
+            check ((drink_his)::text = ANY
+                   ((ARRAY ['never'::character varying, 'former'::character varying, 'current'::character varying])::text[])),
+    is_anesthesia_his                         boolean   default false,
+    anesthesia_type_and_adverse_reaction_his  text,
+    anesthesia_special_conditions_his         text,
+    pe_vital_signs_status                     varchar(50),
+    pe_bp_systolic                            smallint
+        constraint chk_bp_systolic
+            check ((pe_bp_systolic >= 50) AND (pe_bp_systolic <= 250)),
+    pe_bp_diastolic                           smallint
+        constraint chk_bp_diastolic
+            check ((pe_bp_diastolic >= 30) AND (pe_bp_diastolic <= 150)),
+    pe_pulse_rate                             smallint
+        constraint chk_pulse_rate
+            check ((pe_pulse_rate >= 30) AND (pe_pulse_rate <= 200)),
+    pe_spo2                                   smallint
+        constraint chk_spo2
+            check ((pe_spo2 >= 50) AND (pe_spo2 <= 100)),
+    pe_is_hypertension                        boolean   default false,
+    pe_is_hypotension                         boolean   default false,
+    pe_is_tachycardia                         boolean   default false,
+    pe_is_bradycardia                         boolean   default false,
+    pe_is_tachypnea                           boolean   default false,
+    pe_is_fever                               boolean   default false,
+    pe_consciousness                          varchar(50),
+    pe_is_auscultation_normal                 boolean   default true,
+    pe_is_breath_sound_coarse                 boolean   default false,
+    pe_is_moist_rales                         boolean   default false,
+    pe_is_wheezing                            boolean   default false,
+    pe_is_breath_sound_asymmetric             boolean   default false,
+    pe_is_breath_sound_diminished             boolean   default false,
+    pe_is_heart_murmur                        boolean   default false,
+    pe_is_arrhythmia                          boolean   default false,
+    pe_is_cardiopulmonary_auscultation_normal boolean   default true,
+    pe_is_mouth_open_lt_3cm                   boolean   default false,
+    pe_is_thyromental_distance_lt_6cm         boolean   default false,
+    pe_is_micrognathia                        boolean   default false,
+    pe_is_mallampati_ge_3                     boolean   default false,
+    pe_is_dentition_abnormal                  boolean   default false,
+    pe_is_limited_neck_mobility               boolean   default false,
+    pe_is_puncture_site_normal                boolean   default true,
+    pe_is_puncture_site_infected              boolean   default false,
+    pe_is_puncture_site_ulcerated             boolean   default false,
+    pe_is_spinal_malformation                 boolean   default false,
+    lab_blood_routine_status                  varchar(50),
+    lab_ecg_status                            varchar(50),
+    lab_chest_xray_status                     varchar(50),
+    lab_liver_function_status                 varchar(50),
+    lab_kidney_function_status                varchar(50),
+    lab_lung_function_status                  varchar(50),
+    lab_thyroid_function_status               varchar(50),
+    lab_coagulation_status                    varchar(50),
+    lab_electrolyte_status                    varchar(50),
+    lab_blood_glucose_status                  varchar(50),
+    lab_crossmatch_status                     varchar(50),
+    lab_blood_gas_status                      varchar(50),
+    lab_dynamic_ecg_status                    varchar(50),
+    lab_cardiac_ultrasound_status             varchar(50),
+    lab_abnormal_description                  text,
+    asa_class                                 varchar(5)
+        constraint paa_information_asa_class_check
+            check ((asa_class)::text = ANY
+                   ((ARRAY ['I'::character varying, 'II'::character varying, 'III'::character varying, 'IV'::character varying, 'V'::character varying, 'E'::character varying])::text[]))
+        constraint chk_asa_class
+            check ((asa_class)::text = ANY
+                   ((ARRAY ['I'::character varying, 'II'::character varying, 'III'::character varying, 'IV'::character varying, 'V'::character varying, 'E'::character varying])::text[])),
+    cardiac_function_class                    varchar(5)
+        constraint paa_information_cardiac_function_class_check
+            check ((cardiac_function_class)::text = ANY
+                   ((ARRAY ['I'::character varying, 'II'::character varying, 'III'::character varying, 'IV'::character varying])::text[]))
+        constraint chk_cardiac_function
+            check ((cardiac_function_class)::text = ANY
+                   ((ARRAY ['I'::character varying, 'II'::character varying, 'III'::character varying, 'IV'::character varying])::text[])),
+    airway_difficulty                         varchar(50)
+        constraint paa_information_airway_difficulty_check
+            check ((airway_difficulty)::text = ANY
+                   ((ARRAY ['none'::character varying, 'suspected'::character varying, 'intubation_difficult'::character varying, 'ventilation_difficult'::character varying])::text[]))
+        constraint chk_airway
+            check ((airway_difficulty)::text = ANY
+                   ((ARRAY ['none'::character varying, 'suspected'::character varying, 'intubation_difficult'::character varying, 'ventilation_difficult'::character varying])::text[])),
+    anesthesia_risk_level                     varchar(20)
+        constraint paa_information_anesthesia_risk_level_check
+            check ((anesthesia_risk_level)::text = ANY
+                   ((ARRAY ['low'::character varying, 'medium'::character varying, 'high'::character varying])::text[]))
+        constraint chk_anesthesia_risk
+            check ((anesthesia_risk_level)::text = ANY
+                   ((ARRAY ['low'::character varying, 'medium'::character varying, 'high'::character varying])::text[])),
+    further_diagnosis_plan                    varchar(30)
+        constraint paa_information_further_diagnosis_plan_check
+            check ((further_diagnosis_plan)::text = ANY
+                   ((ARRAY ['feasible'::character varying, 'not_feasible'::character varying, 'defer'::character varying, 'need_further_treatment'::character varying])::text[]))
+        constraint chk_further_plan
+            check ((further_diagnosis_plan)::text = ANY
+                   ((ARRAY ['feasible'::character varying, 'not_feasible'::character varying, 'defer'::character varying, 'need_further_treatment'::character varying])::text[])),
+    created_at                                timestamp default CURRENT_TIMESTAMP,
+    updated_at                                timestamp default CURRENT_TIMESTAMP
+);
+
+alter table paa_information
+    owner to postgres;
+
+
+    暂时无法在飞书文档外展示此内容
+CREATE TABLE IF NOT EXISTS public.recovery_complication_event (
+    -- 主键字段
+    complication_event_id BIGSERIAL PRIMARY KEY,
+    -- 外键字段（关联治疗信息表）
+    treatment_information_id BIGINT NOT NULL,
+    -- 业务字段
+    event_name VARCHAR(50) NOT NULL,
+    event_time INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- 外键约束（与治疗信息表关联，动作同步主表逻辑）
+    CONSTRAINT fk_recovery_complication_treatment FOREIGN KEY (treatment_information_id)
+        REFERENCES public.treatment_information (treatment_information_id)
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION,
+
+    -- 字段注释
+    COMMENT ON COLUMN public.recovery_complication_event.complication_event_id IS '主键，并发症事件唯一标识（自增）',
+    COMMENT ON COLUMN public.recovery_complication_event.treatment_information_id IS '外键，关联治疗信息表的treatment_information_id（非空）',
+    COMMENT ON COLUMN public.recovery_complication_event.event_name IS '并发症事件名称（支持重复，可选：恶心呕吐、从床上跌落、剧烈体动）',
+    COMMENT ON COLUMN public.recovery_complication_event.event_time IS '事件发生时间（整数格式）',
+    COMMENT ON COLUMN public.recovery_complication_event.created_at IS '记录创建时间（默认当前时间）'
+);
+
+
+暂时无法在飞书文档外展示此内容
+CREATE TABLE IF NOT EXISTS public.recovery_intraoperative_event (
+    -- 主键字段
+    recovery_intraoperative_event_id BIGSERIAL PRIMARY KEY,
+    -- 外键字段（关联治疗信息表）
+    treatment_information_id BIGINT NOT NULL,
+    -- 业务字段（event_name唯一）
+    event_name VARCHAR(50) NOT NULL,
+    event_time INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- 外键约束（与治疗信息表关联）
+    CONSTRAINT fk_recovery_intraoperative_treatment FOREIGN KEY (treatment_information_id)
+        REFERENCES public.treatment_information (treatment_information_id)
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION,
+
+    -- 唯一约束（确保事件名不重复）
+    CONSTRAINT uk_recovery_intraoperative_event_name UNIQUE (event_name),
+
+    -- 字段注释
+    COMMENT ON COLUMN public.recovery_intraoperative_event.recovery_intraoperative_event_id IS '主键，复苏术中事件唯一标识（自增）',
+    COMMENT ON COLUMN public.recovery_intraoperative_event.treatment_information_id IS '外键，关联治疗信息表的treatment_information_id（非空）',
+    COMMENT ON COLUMN public.recovery_intraoperative_event.event_name IS '复苏术中事件名称（唯一，可选：进入恢复室、出恢复室等10项）',
+    COMMENT ON COLUMN public.recovery_intraoperative_event.event_time IS '事件发生时间（整数格式）',
+    COMMENT ON COLUMN public.recovery_intraoperative_event.created_at IS '记录创建时间（默认当前时间）'
+);
+
+
+暂时无法在飞书文档外展示此内容
+CREATE TABLE IF NOT EXISTS public.recovery_monitoring_event (
+    -- 主键字段
+    monitoring_event_id BIGSERIAL PRIMARY KEY,
+    -- 外键字段（关联治疗信息表）
+    treatment_information_id BIGINT NOT NULL,
+    -- 监测事件业务字段（均为布尔型，非空）
+    atomization_inhalation BOOLEAN NOT NULL,
+    oral_care BOOLEAN NOT NULL,
+    arteriovenous_catheter_care BOOLEAN NOT NULL,
+    st_segment_analysis BOOLEAN NOT NULL,
+    heart_rate_variability_analysis BOOLEAN NOT NULL,
+    blood_fluid_warming_treatment BOOLEAN NOT NULL,
+    auscultate_breath_sounds BOOLEAN NOT NULL,
+    limb_compression_therapy BOOLEAN NOT NULL,
+    mask_oxygen_inhalation BOOLEAN NOT NULL,
+    oropharyngeal_nasopharyngeal_ventilation BOOLEAN NOT NULL,
+    leave_room_with_tube BOOLEAN NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- 外键约束（与治疗信息表关联）
+    CONSTRAINT fk_recovery_monitoring_treatment FOREIGN KEY (treatment_information_id)
+        REFERENCES public.treatment_information (treatment_information_id)
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION,
+
+    -- 字段注释
+    COMMENT ON COLUMN public.recovery_monitoring_event.monitoring_event_id IS '主键，监测事件唯一标识（自增）',
+    COMMENT ON COLUMN public.recovery_monitoring_event.treatment_information_id IS '外键，关联治疗信息表的treatment_information_id（非空）',
+    COMMENT ON COLUMN public.recovery_monitoring_event.atomization_inhalation IS '雾化吸入是否启用（布尔值）',
+    COMMENT ON COLUMN public.recovery_monitoring_event.oral_care IS '口腔护理是否启用（布尔值）',
+    COMMENT ON COLUMN public.recovery_monitoring_event.arteriovenous_catheter_care IS '动静脉置管护理是否启用（布尔值）',
+    COMMENT ON COLUMN public.recovery_monitoring_event.st_segment_analysis IS 'ST段分析是否启用（布尔值）',
+    COMMENT ON COLUMN public.recovery_monitoring_event.heart_rate_variability_analysis IS '心率变异性分析是否启用（布尔值）',
+    COMMENT ON COLUMN public.recovery_monitoring_event.blood_fluid_warming_treatment IS '血液/液体加温治疗是否启用（布尔值）',
+    COMMENT ON COLUMN public.recovery_monitoring_event.auscultate_breath_sounds IS '听诊呼吸音是否启用（布尔值）',
+    COMMENT ON COLUMN public.recovery_monitoring_event.limb_compression_therapy IS '肢体气压治疗是否启用（布尔值）',
+    COMMENT ON COLUMN public.recovery_monitoring_event.mask_oxygen_inhalation IS '面罩吸氧是否启用（布尔值）',
+    COMMENT ON COLUMN public.recovery_monitoring_event.oropharyngeal_nasopharyngeal_ventilation IS '口咽/鼻咽通气是否启用（布尔值）',
+    COMMENT ON COLUMN public.recovery_monitoring_event.leave_room_with_tube IS '带管出室是否启用（布尔值）',
+    COMMENT ON COLUMN public.recovery_monitoring_event.created_at IS '记录创建时间（默认当前时间）'
+);
+
+
+暂时无法在飞书文档外展示此内容
+
+
+
+-- 麻醉恢复区评估表
+CREATE TABLE IF NOT EXISTS public.recovery_area_room_assessment (
+    recovery_area_room_assessment_id BIGSERIAL PRIMARY KEY,    -- 主键ID
+    treatment_information_id BIGINT,                           -- 外键（关联治疗信息）
+
+    -- 生命体征
+    bp INTEGER,                                                -- 血压(mmHg)
+    p_bpm INTEGER,                                             -- 脉搏(bpm)
+    r_bpm INTEGER,                                             -- 呼吸频率(bpm)
+    spo2 INTEGER,                                              -- 血氧饱和度(%)
+
+    -- 麻醉及镇痛评分
+    anesthesia_satisfaction VARCHAR(20),                       -- 麻醉满意度
+    vas_score INTEGER,                                         -- VAS评分
+
+    -- 恢复情况及意识评估
+    recovery_conscious BOOLEAN,                                -- 是否恢复躁动（清醒）
+    skin_condition VARCHAR(50),                                -- 皮肤黏膜状况
+    steward_score INTEGER,                                     -- Steward苏醒评分
+    awakening_level VARCHAR(50),                               -- 清醒程度
+    airway_patency VARCHAR(50),                                -- 呼吸道通畅程度
+    limb_activity VARCHAR(50),                                 -- 肢体活动度
+
+    -- 瞳孔情况
+    pupil_equal BOOLEAN,                                       -- 瞳孔大小是否等大
+    pupil_light_reflex VARCHAR(50),                            -- 瞳孔光反射
+
+    -- 呼吸及肌力
+    respiration_vt INTEGER,                                    -- 呼吸潮气量
+    muscle_strength INTEGER,                                   -- 肌力
+    top_ratio INTEGER,                                         -- TOF（神经肌肉监测指标）
+    respiration_sound VARCHAR(50),                             -- 呼吸音
+
+    -- 反射及声音
+    reflex VARCHAR(50),                                        -- 反射
+    sound VARCHAR(50),                                         -- 声音（声嘶情况）
+
+    -- 自我报告能力及认知
+    self_report_ability VARCHAR(50),                           -- 自诉其名能力
+    consciousness_orientation BOOLEAN,                         -- 时间定向力
+    spatial_orientation BOOLEAN,                               -- 空间定向力
+    calculation_ability BOOLEAN,                               -- 计算能力
+    memory BOOLEAN,                                            -- 记忆力
+
+    -- 填表时间
+    assessment_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,       -- 填表时间
+
+    -- 外键约束
+    CONSTRAINT fk_recovery_area_treatment_information
+        FOREIGN KEY (treatment_information_id)
+        REFERENCES public.treatment_information (treatment_information_id)
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+);
+
+COMMENT ON TABLE public.recovery_area_room_assessment IS '麻醉恢复区评估表';
+
+
+暂时无法在飞书文档外展示此内容
+
+CREATE TABLE IF NOT EXISTS public.surgery_step (
+    surgery_step_id BIGSERIAL PRIMARY KEY,             -- 主键ID
+    treatment_information_id BIGINT NOT NULL,          -- 外键（关联治疗信息）
+    step_name VARCHAR(255) NOT NULL,                   -- 步骤名称
+    step_time TIMESTAMP DEFAULT NOW(),                 -- 步骤发生时间
+
+    CONSTRAINT fk_surgery_step_treatment
+        FOREIGN KEY (treatment_information_id)
+        REFERENCES public.treatment_information (treatment_information_id)
+        ON DELETE CASCADE
+);

@@ -1,0 +1,5 @@
+# 麻醉科数据库重建脚本依赖
+# conda 环境: anesthesia_db
+# Python 版本: 3.11
+
+psycopg2-binary>=2.9.0
