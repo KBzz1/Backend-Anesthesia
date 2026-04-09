@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.medical.mapper.RERMapper">
+
+    <select id="selectIntraoperativeEvents" resultType="com.medical.pojo.DTO.RecoveryEventRecord$IntraoperativeEvent">
+        SELECT event_name AS eventName,
+               COALESCE(event_hour, event_time / 60) AS eventHour,
+               COALESCE(event_min, event_time % 60) AS eventMinute
+        FROM recovery_intraoperative_event
+        WHERE treatment_information_id = #{treatmentInformationId}
+        ORDER BY COALESCE(event_hour, event_time / 60), COALESCE(event_min, event_time % 60)
+    </select>
+
+    <select id="selectComplicationEvents" resultType="com.medical.pojo.DTO.RecoveryEventRecord$ComplicationEvent">
+        SELECT event_name AS eventName,
+               COALESCE(event_hour, event_time / 60) AS eventHour,
+               COALESCE(event_min, event_time % 60) AS eventMinute
+        FROM recovery_complication_event
+        WHERE treatment_information_id = #{treatmentInformationId}
+        ORDER BY COALESCE(event_hour, event_time / 60), COALESCE(event_min, event_time % 60)
+    </select>
+
+    <select id="selectMonitoringEvent" resultType="com.medical.pojo.DTO.RecoveryEventRecord$MonitoringEvent">
+        SELECT atomization_inhalation AS atomizationInhalation,
+               oral_care AS oralCare,
+               arteriovenous_catheter_care AS arteriovenousCatheterCare,
+               st_segment_analysis AS stSegmentAnalysis,
+               heart_rate_variability_analysis AS heartRateVariabilityAnalysis,
+               blood_fluid_warming_treatment AS bloodFluidWarmingTreatment,
+               auscultate_breath_sounds AS auscultateBreathSounds,
+               limb_compression_therapy AS limbCompressionTherapy,
+               mask_oxygen_inhalation AS maskOxygenInhalation,
+               oropharyngeal_nasopharyngeal_ventilation AS oropharyngealNasopharyngealVentilation,
+               leave_room_with_tube AS leaveRoomWithTube
+        FROM recovery_monitoring_event
+        WHERE treatment_information_id = #{treatmentInformationId}
+        ORDER BY created_at DESC LIMIT 1
+    </select>
+
+    <insert id="insertMonitoringEvent" parameterType="map">
+        INSERT INTO recovery_monitoring_event (
+            treatment_information_id,
+            atomization_inhalation,
+            oral_care,
+            arteriovenous_catheter_care,
+            st_segment_analysis,
+            heart_rate_variability_analysis,
+            blood_fluid_warming_treatment,
+            auscultate_breath_sounds,
+            limb_compression_therapy,
+            mask_oxygen_inhalation,
+            oropharyngeal_nasopharyngeal_ventilation,
+            leave_room_with_tube
+        ) VALUES (
+            #{treatmentInformationId},
+            #{atomizationInhalation},
+            #{oralCare},
+            #{arteriovenousCatheterCare},
+            #{stSegmentAnalysis},
+            #{heartRateVariabilityAnalysis},
+            #{bloodFluidWarmingTreatment},
+            #{auscultateBreathSounds},
+            #{limbCompressionTherapy},
+            #{maskOxygenInhalation},
+            #{oropharyngealNasopharyngealVentilation},
+            #{leaveRoomWithTube}
+        )
+    </insert>
+
+    <insert id="insertIntraoperativeEvent" parameterType="map">
+        INSERT INTO recovery_intraoperative_event (
+            treatment_information_id,
+            event_name,
+            event_hour,
+            event_min
+        ) VALUES (
+            #{treatmentInformationId},
+            #{eventName},
+            #{eventHour},
+            #{eventMinute}
+        )
+    </insert>
+
+    <insert id="insertComplicationEvent" parameterType="map">
+        INSERT INTO recovery_complication_event (
+            treatment_information_id,
+            event_name,
+            event_hour,
+            event_min
+        ) VALUES (
+            #{treatmentInformationId},
+            #{eventName},
+            #{eventHour},
+            #{eventMinute}
+        )
+    </insert>
+
+</mapper>

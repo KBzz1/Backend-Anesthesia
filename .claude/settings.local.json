@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker exec anesthesia-backend-postgres:*)",
+      "Bash(docker exec:*)",
+      "Bash(pip3 install:*)",
+      "Bash(python3 -c \"import bcrypt; print\\(bcrypt.hashpw\\(b'test1234', bcrypt.gensalt\\(rounds=6\\)\\).decode\\(\\)\\)\")",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)"
+    ]
+  }
+}

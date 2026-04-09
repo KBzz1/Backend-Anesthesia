@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.medical.mapper.SurgeryAreaMapper">
+
+    <resultMap id="SurgeryAreaResultMap" type="com.medical.pojo.DTO.SurgeryAreaDTO">
+        <association property="patient" javaType="com.medical.pojo.Patient" columnPrefix="p_">
+            <id property="patientId" column="patient_id"/>
+            <result property="name" column="name"/>
+            <result property="gender" column="gender"/>
+            <result property="age" column="age"/>
+            <result property="idCardNumber" column="id_card_number"/>
+            <result property="isSoldier" column="is_soldier"/>
+        </association>
+        
+        <association property="treatmentInformation" javaType="com.medical.pojo.Surgery" columnPrefix="t_">
+            <id property="surgeryId" column="treatment_information_id"/>
+            <result property="patientId" column="patient_id"/>
+            <result property="surgeryMethod" column="surgery_method"/>
+            <result property="otherSurgeryMethod" column="other_surgery_method"/>
+            <result property="anesthesiaMethod" column="anesthesia_method"/>
+            <result property="isEmergency" column="is_emergency"/>
+        </association>
+        
+        <association property="paa" javaType="com.medical.pojo.PaaInformation">
+            <id property="paaId" column="paa_id"/>
+            <result property="surgeryId" column="treatment_information_id"/>
+            <result property="height" column="height"/>
+            <result property="weight" column="weight"/>
+            <result property="idCardNumber" column="id_card_number"/>
+            <result property="hisIsHypertension" column="his_is_hypertension"/>
+            <result property="hisIsChronicBronchitis" column="his_is_chronic_bronchitis"/>
+            <result property="hisIsOsas" column="his_is_osas"/>
+            <result property="hisIsDiabetes" column="his_is_diabetes"/>
+            <result property="hisIsAsthma" column="his_is_asthma"/>
+            <result property="hisIsStroke" column="his_is_stroke"/>
+            <result property="hisIsCoronaryHeartDisease" column="his_is_coronary_heart_disease"/>
+            <result property="hisIsArrhythmia" column="his_is_arrhythmia"/>
+            <result property="hisIsCopd" column="his_is_copd"/>
+            <result property="hisIsPepticUlcer" column="his_is_peptic_ulcer"/>
+            <result property="hisIsThyroidDysfunction" column="his_is_thyroid_dysfunction"/>
+            <result property="hisIsHematemesisOrMelena" column="his_is_hematemesis_or_melena"/>
+
+            <result property="hisOthers" column="his_others"/>
+            <result property="longTermMedication" column="is_long_term_medication"/>
+            <result property="medicationNameAndUsage" column="medication_name_and_usage"/>
+            <result property="smokeHis" column="smoke_his"/>
+            <result property="drinkHis" column="drink_his"/>
+
+            <result property="anesthesiaHis" column="is_anesthesia_his"/>
+            <result property="anesthesiaTypeAndAdverseReactionHis" column="anesthesia_type_and_adverse_reaction_his"/>
+            <result property="anesthesiaSpecialConditionsHis" column="anesthesia_special_conditions_his"/>
+
+            <result property="peVitalSignsStatus" column="pe_vital_signs_status"/>
+            <result property="bloodpresure" column="pe_bp"/>
+            <result property="pePulseRate" column="pe_pulse_rate"/>
+            <result property="peSpo2" column="pe_spo2"/>
+            <result property="peIsHypertension" column="pe_is_hypertension"/>
+            <result property="peIsHypotension" column="pe_is_hypotension"/>
+            <result property="peIsTachycardia" column="pe_is_tachycardia"/>
+            <result property="peIsBradycardia" column="pe_is_bradycardia"/>
+            <result property="peIsTachypnea" column="pe_is_tachypnea"/>
+            <result property="peIsFever" column="pe_is_fever"/>
+            <result property="peConsciousness" column="pe_consciousness"/>
+
+            <result property="peIsAuscultationNormal" column="pe_is_auscultation_normal"/>
+            <result property="peIsBreathSoundCoarse" column="pe_is_breath_sound_coarse"/>
+            <result property="peIsMoistRales" column="pe_is_moist_rales"/>
+            <result property="peIsWheezing" column="pe_is_wheezing"/>
+            <result property="peIsBreathSoundAsymmetric" column="pe_is_breath_sound_asymmetric"/>
+            <result property="peIsBreathSoundDiminished" column="pe_is_breath_sound_diminished"/>
+            <result property="peIsHeartMurmur" column="pe_is_heart_murmur"/>
+            <result property="peIsArrhythmia" column="pe_is_arrhythmia"/>
+            <result property="peIsCardiopulmonaryAuscultationNormal" column="pe_is_cardiopulmonary_auscultation_normal"/>
+            <result property="peIsMouthOpenLt3cm" column="pe_is_mouth_open_lt_3cm"/>
+            <result property="peIsThyromentalDistanceLt6cm" column="pe_is_thyromental_distance_lt_6cm"/>
+            <result property="peIsMicrognathia" column="pe_is_micrognathia"/>
+            <result property="peIsMallampatiGe3" column="pe_is_mallampati_ge_3"/>
+            <result property="peIsDentitionAbnormal" column="pe_is_dentition_abnormal"/>
+            <result property="peIsLimitedNeckMobility" column="pe_is_limited_neck_mobility"/>
+            <result property="peIsAirwayNormal" column="pe_is_airway_normal"/>
+            <result property="peIsPunctureSiteNormal" column="pe_is_puncture_site_normal"/>
+            <result property="peIsPunctureSiteInfected" column="pe_is_puncture_site_infected"/>
+            <result property="peIsPunctureSiteUlcerated" column="pe_is_puncture_site_ulcerated"/>
+            <result property="peIsSpinalMalformation" column="pe_is_spinal_malformation"/>
+
+            <result property="labBloodRoutineStatus" column="lab_blood_routine_status"/>
+            <result property="labEcgStatus" column="lab_ecg_status"/>
+            <result property="labChestXrayStatus" column="lab_chest_xray_status"/>
+            <result property="labLungFunctionStatus" column="lab_lung_function_status"/>
+            <result property="labCoagulationStatus" column="lab_coagulation_status"/>
+            <result property="labElectrolyteStatus" column="lab_electrolyte_status"/>
+            <result property="labHepaticRenalFunction" column="lab_hepatic_renal_function"/>
+            <result property="labElse" column="lab_else"/>
+            <result property="labCoronaryAngiography" column="lab_coronary_angiography"/>
+
+            <result property="asaClass" column="asa_class"/>
+            <result property="cardiacFunctionClass" column="cardiac_function_class"/>
+            <result property="airwayDifficulty" column="airway_difficulty"/>
+            <result property="anesthesiaRiskLevel" column="anesthesia_risk_level"/>
+            <result property="furtherDiagnosisPlan" column="further_diagnosis_plan"/>
+
+            <result property="createdAt" column="created_at"/>
+            <result property="updatedAt" column="updated_at"/>
+
+            <result property="chiefComplaint" column="chief_complaint"/>
+            <result property="specialRiskNotice" column="special_risk_notice"/>
+            <result property="agentRelationship" column="agent_relationship"/>
+            <result property="asaClassSuggestion" column="asa_class_suggestion"/>
+        </association>
+    </resultMap>
+
+    <select id="getSurgeryAreaInfo" resultMap="SurgeryAreaResultMap">
+        SELECT
+            p.patient_id as p_patient_id,
+            p.name as p_name,
+            p.gender as p_gender,
+            p.age as p_age,
+            p.id_card_number as p_id_card_number,
+            p.is_soldier as p_is_soldier,
+
+            t.treatment_information_id as t_treatment_information_id,
+            t.patient_id as t_patient_id,
+            t.surgery_method as t_surgery_method,
+            t.other_surgery_method as t_other_surgery_method,
+            t.anesthesia_method as t_anesthesia_method,
+            t.is_emergency as t_is_emergency,
+
+            paa.*
+        FROM treatment_information t
+        JOIN patient p ON t.patient_id = p.patient_id
+        LEFT JOIN paa_information paa ON t.treatment_information_id = paa.treatment_information_id
+        WHERE t.treatment_information_id = #{surgeryId}
+    </select>
+
+    <insert id="insertDrugPushLogs" parameterType="java.util.List">
+        INSERT INTO drug_push_log (drug_name, push_time, dosage, unit, treatment_information_id)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.drugName}, #{item.pushTime}, #{item.dosage}, #{item.unit}, #{item.treatmentInformationId})
+        </foreach>
+    </insert>
+
+    <insert id="insertSurgerySteps" parameterType="java.util.List">
+        INSERT INTO surgery_step (treatment_information_id, step_name, step_time)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.treatmentInformationId}, #{item.stepName}, #{item.stepTime})
+        </foreach>
+    </insert>
+
+    <update id="updateAnesthesiologist">
+        UPDATE treatment_information
+        SET anesthesiologist_id = #{staffId}
+        WHERE treatment_information_id = #{surgeryId}
+    </update>
+
+    <select id="getSignature" resultType="map">
+        SELECT signature
+        FROM medical_staff_info
+        WHERE staff_id = #{staffId}
+    </select>
+
+</mapper>

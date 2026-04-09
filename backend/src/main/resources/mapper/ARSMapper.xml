@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.medical.mapper.ARSMapper">
+
+    <resultMap id="AnesthesiaRecordSummaryMap" type="com.medical.pojo.DTO.AnesthesiaRecordSummaryDTO">
+        <result property="patientId" column="patient_id"/>
+        <result property="name" column="name"/>
+        <result property="gender" column="gender"/>
+        <result property="age" column="age"/>
+        <result property="idCardNumber" column="id_card_number"/>
+        <result property="preoperativeDiagnosis" column="preoperative_diagnosis"/>
+        <result property="plannedSurgery" column="planned_surgery"/>
+        <result property="anesthesiaMethod" column="anesthesia_method"/>
+        <result property="preoperativeSpecialCondition" column="preoperative_special_condition"/>
+        <result property="surgeryStartTime" column="surgery_start_time"/>
+        <result property="surgeryEndTime" column="surgery_end_time"/>
+        <result property="recoveryEndTime" column="recovery_end_time"/>
+
+        <!-- 恢复室评估字段映射到 DTO 的 recovery.* 子对象 -->
+        <result property="recovery.bp" column="bp"/>
+        <result property="recovery.pBpm" column="p_bpm"/>
+        <result property="recovery.rBpm" column="r_bpm"/>
+        <result property="recovery.spo2" column="spo2"/>
+        <result property="recovery.anesthesiaSatisfaction" column="anesthesia_satisfaction"/>
+        <result property="recovery.vasScore" column="vas_score"/>
+        <result property="recovery.recoveryConscious" column="recovery_conscious"/>
+        <result property="recovery.skinCondition" column="skin_condition"/>
+        <result property="recovery.stewardScore" column="steward_score"/>
+        <result property="recovery.awakeningLevel" column="awakening_level"/>
+        <result property="recovery.airwayPatency" column="airway_patency"/>
+        <result property="recovery.limbActivity" column="limb_activity"/>
+        <result property="recovery.pupilLightReflex" column="pupil_light_reflex"/>
+        <result property="recovery.respirationVt" column="respiration_vt"/>
+        <result property="recovery.muscleStrength" column="muscle_strength"/>
+        <result property="recovery.topRatio" column="top_ratio"/>
+        <result property="recovery.respirationSound" column="respiration_sound"/>
+        <result property="recovery.reflex" column="reflex"/>
+        <result property="recovery.sound" column="sound"/>
+        <result property="recovery.selfReportAbility" column="self_report_ability"/>
+        <result property="recovery.consciousnessOrientation" column="consciousness_orientation"/>
+        <result property="recovery.spatialOrientation" column="spatial_orientation"/>
+        <result property="recovery.calculationAbility" column="calculation_ability"/>
+        <result property="recovery.memory" column="memory"/>
+        <result property="recovery.pupilEqual" column="pupil_equal"/>
+    </resultMap>
+
+    <select id="findByTreatmentId" parameterType="long" resultMap="AnesthesiaRecordSummaryMap">
+        SELECT
+            p.patient_id,
+            p.name,
+            p.gender,
+            p.age,
+            p.id_card_number,
+            pa.chief_complaint                    AS preoperative_diagnosis,
+            t.surgery_method                      AS planned_surgery,
+            t.anesthesia_method                   AS anesthesia_method,
+            t.surgery_start_time,
+            t.surgery_end_time,
+            COALESCE(
+                t.recovery_end_time,
+                (SELECT MAX(time) FROM waveform_parameter WHERE treatment_information_id = t.treatment_information_id)
+            ) AS recovery_end_time,
+            TRIM(BOTH ',' FROM CONCAT_WS(',',
+                CASE WHEN pa.his_is_hypertension THEN '高血压' ELSE NULL END,
+                CASE WHEN pa.his_is_chronic_bronchitis THEN '慢支炎' ELSE NULL END,
+                CASE WHEN pa.his_is_osas THEN 'OSAS' ELSE NULL END,
+                CASE WHEN pa.his_is_diabetes THEN '糖尿病' ELSE NULL END,
+                CASE WHEN pa.his_is_asthma THEN '哮喘' ELSE NULL END,
+                CASE WHEN pa.his_is_stroke THEN '脑中风' ELSE NULL END,
+                CASE WHEN pa.his_is_coronary_heart_disease THEN '冠心病' ELSE NULL END,
+                CASE WHEN pa.his_is_arrhythmia THEN '心律失常' ELSE NULL END,
+                CASE WHEN pa.his_is_copd THEN 'COPD' ELSE NULL END,
+                CASE WHEN pa.his_is_peptic_ulcer THEN '消化性溃疡' ELSE NULL END,
+                CASE WHEN pa.his_is_thyroid_dysfunction THEN '甲亢甲减' ELSE NULL END,
+                CASE WHEN pa.his_is_hematemesis_or_melena THEN '呕血黑便' ELSE NULL END,
+                NULLIF(pa.his_others, '')
+            ))                                   AS preoperative_special_condition,
+
+            -- 恢复室评估字段（recovery_area_room_assessment）
+            ra.bp,
+            ra.p_bpm,
+            ra.r_bpm,
+            ra.spo2,
+            ra.anesthesia_satisfaction,
+            ra.vas_score,
+            ra.recovery_conscious,
+            ra.skin_condition,
+            ra.steward_score,
+            ra.awakening_level,
+            ra.airway_patency,
+            ra.limb_activity,
+            ra.pupil_light_reflex,
+            ra.respiration_vt,
+            ra.muscle_strength,
+            ra.top_ratio,
+            ra.respiration_sound,
+            ra.reflex,
+            ra.sound,
+            ra.self_report_ability,
+            ra.consciousness_orientation,
+            ra.spatial_orientation,
+            ra.calculation_ability,
+            ra.memory,
+            CASE
+                WHEN ra.pupil_equal IS TRUE THEN '等大'
+                WHEN ra.pupil_equal IS FALSE THEN '不等大'
+                ELSE NULL
+            END AS pupil_equal
+        FROM treatment_information t
+                 JOIN paa_information pa ON pa.treatment_information_id = t.treatment_information_id
+                 JOIN patient p ON p.patient_id = t.patient_id
+                 LEFT JOIN recovery_area_room_assessment ra ON ra.treatment_information_id = t.treatment_information_id
+        WHERE t.treatment_information_id = #{treatmentId}
+        LIMIT 1
+    </select>
+
+    <select id="findSurgeryStepsByTreatmentId" parameterType="long" resultType="com.medical.pojo.SurgeryStep">
+        SELECT
+            surgery_step_id,
+            treatment_information_id,
+            step_name,
+            step_time
+        FROM surgery_step
+        WHERE treatment_information_id = #{treatmentId}
+        ORDER BY step_time ASC
+    </select>
+
+    <select id="findAnesthesiologistIdByTreatmentId" parameterType="long" resultType="long">
+        SELECT anesthesiologist_id
+        FROM treatment_information
+        WHERE treatment_information_id = #{treatmentId}
+    </select>
+
+    <select id="findRecoveryDoctorIdByTreatmentId" parameterType="long" resultType="long">
+        SELECT recovery_doctor_id
+        FROM treatment_information
+        WHERE treatment_information_id = #{treatmentId}
+    </select>
+
+    <select id="findStaffNameById" parameterType="long" resultType="string">
+        SELECT name
+        FROM medical_staff_info
+        WHERE staff_id = #{staffId}
+    </select>
+
+    <select id="findSignatureById" parameterType="long" resultType="byte[]">
+        SELECT signature
+        FROM medical_staff_info
+        WHERE staff_id = #{value}
+        LIMIT 1
+    </select>
+
+    <select id="findPatientsByDate" resultType="com.medical.pojo.DTO.PatientSummaryDTO">
+        SELECT
+            p.name,
+            t.treatment_information_id AS surgeryId
+        FROM treatment_information t
+        JOIN patient p ON p.patient_id = t.patient_id
+        WHERE DATE(t.surgery_start_time) = #{date}
+    </select>
+
+</mapper>

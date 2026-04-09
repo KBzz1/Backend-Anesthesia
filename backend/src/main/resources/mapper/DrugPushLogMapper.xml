@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.medical.mapper.DrugPushLogMapper">
+
+    <select id="selectByTreatmentInformationId" resultType="com.medical.pojo.DTO.DrugRecordItemDTO">
+        SELECT
+            drug_name,
+            dosage,
+            unit,
+            push_time
+        FROM drug_push_log
+        WHERE treatment_information_id = #{treatmentInformationId}
+        ORDER BY push_time ASC, id ASC
+    </select>
+
+</mapper>

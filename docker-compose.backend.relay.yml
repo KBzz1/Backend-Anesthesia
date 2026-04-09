@@ -1,0 +1,16 @@
+services:
+  backend-relay:
+    image: ${BACKEND_RELAY_IMAGE:-cloudflare/cloudflared:latest}
+    container_name: anesthesia-backend-relay
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      backend:
+        condition: service_healthy
+    command:
+      - tunnel
+      - --no-autoupdate
+      - run
+      - --token
+      - ${BACKEND_RELAY_TOKEN:-}

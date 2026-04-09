@@ -1,0 +1,18 @@
+server:
+  port: 18080
+
+spring:
+  application:
+    name: anesthesia-refactor
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:5432/anesthesia
+    username: postgres
+    password: medical310
+
+stomp:
+  server:
+    url: ws://127.0.0.1:8080/ws
+
+device:
+  binding:
+    url: http://127.0.0.1:8080/device/binding/device/

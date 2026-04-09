@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.medical.mapper.RecoveryMapper">
+
+    <!-- 入室记录：recovery_room_record -->
+    <insert id="insertRoomRecord" parameterType="com.medical.pojo.Recovery">
+        INSERT INTO recovery_room_record (
+            treatment_information_id,
+            bp,
+            p_bpm,
+            r_bpm,
+            spo2,
+            anesthesia_satisfaction,
+            vas_score,
+            recovery_conscious,
+            skin_condition,
+            steward_score,
+            awakening_level,
+            airway_patency,
+            limb_activity,
+            pupil_light_reflex,
+            respiration_vt,
+            muscle_strength,
+            top_ratio,
+            respiration_sound,
+            reflex,
+            sound,
+            self_report_ability,
+            consciousness_orientation,
+            spatial_orientation,
+            calculation_ability,
+            memory,
+            pupil_equal
+        ) VALUES (
+            #{treatmentInformationId},
+            #{bp},
+            #{pBpm},
+            #{rBpm},
+            #{spo2},
+            #{anesthesiaSatisfaction},
+            #{vasScore},
+            #{recoveryConscious},
+            #{skinCondition},
+            #{stewardScore},
+            #{awakeningLevel},
+            #{airwayPatency},
+            #{limbActivity},
+            #{pupilLightReflex},
+            #{respirationVt},
+            #{muscleStrength},
+            #{topRatio},
+            #{respirationSound},
+            #{reflex},
+            #{sound},
+            #{selfReportAbility},
+            #{consciousnessOrientation},
+            #{spatialOrientation},
+            #{calculationAbility},
+            #{memory},
+            #{pupilEqual,jdbcType=BOOLEAN}
+        )
+    </insert>
+
+    <!-- 出室评估：recovery_area_room_assessment -->
+    <insert id="insertAssessment" parameterType="com.medical.pojo.Recovery">
+        INSERT INTO recovery_area_room_assessment (
+            treatment_information_id,
+            bp,
+            p_bpm,
+            r_bpm,
+            spo2,
+            anesthesia_satisfaction,
+            vas_score,
+            recovery_conscious,
+            skin_condition,
+            steward_score,
+            awakening_level,
+            airway_patency,
+            limb_activity,
+            pupil_light_reflex,
+            respiration_vt,
+            muscle_strength,
+            top_ratio,
+            respiration_sound,
+            reflex,
+            sound,
+            self_report_ability,
+            consciousness_orientation,
+            spatial_orientation,
+            calculation_ability,
+            memory,
+            pupil_equal
+        ) VALUES (
+            #{treatmentInformationId},
+            #{bp},
+            #{pBpm},
+            #{rBpm},
+            #{spo2},
+            #{anesthesiaSatisfaction},
+            #{vasScore},
+            #{recoveryConscious},
+            #{skinCondition},
+            #{stewardScore},
+            #{awakeningLevel},
+            #{airwayPatency},
+            #{limbActivity},
+            #{pupilLightReflex},
+            #{respirationVt},
+            #{muscleStrength},
+            #{topRatio},
+            #{respirationSound},
+            #{reflex},
+            #{sound},
+            #{selfReportAbility},
+            #{consciousnessOrientation},
+            #{spatialOrientation},
+            #{calculationAbility},
+            #{memory},
+            #{pupilEqual,jdbcType=BOOLEAN}
+        )
+    </insert>
+
+    <update id="updateRecoveryEndTime">
+        UPDATE treatment_information
+        SET recovery_end_time = CURRENT_TIMESTAMP
+        WHERE treatment_information_id = #{treatmentInformationId}
+    </update>
+
+    <update id="updateRecoveryDoctorId">
+        UPDATE treatment_information
+        SET recovery_doctor_id = #{staffId}
+        WHERE treatment_information_id = #{treatmentInformationId}
+    </update>
+</mapper>

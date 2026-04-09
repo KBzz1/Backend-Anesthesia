@@ -1,0 +1,24 @@
+.omx/
+.codex/
+
+# IDE
+.idea/
+*.iml
+
+# Build outputs
+backend/target/
+
+# Data and logs
+sourcedata/
+*.log
+
+# Docker
+docker/data/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
+*.swp

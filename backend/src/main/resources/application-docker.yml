@@ -1,0 +1,69 @@
+# Docker 环境配置
+server:
+  port: ${SERVER_PORT:18080}
+  address: ${SERVER_ADDRESS:0.0.0.0}
+
+spring:
+  application:
+    name: ${SPRING_APPLICATION_NAME:anesthesia-refactor}
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://anesthesia-postgres:5433/anesthesia}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:medical310}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+stomp:
+  consumer:
+    enabled: ${STOMP_CONSUMER_ENABLED:false}
+  server:
+    url: ${STOMP_SERVER_URL:ws://anesthesia-backend-app:18080/ws}
+  topic: ${STOMP_TOPIC:/data/sub/5A:48:68:5E:5B:FA}
+  device-id: ${STOMP_DEVICE_ID:5A:48:68:5E:5B:FA}
+  binding-check-interval: 5000
+
+device:
+  binding:
+    url: ${DEVICE_BINDING_URL:http://anesthesia-backend-app:18080/device/binding/device/}
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.medical.pojo
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+auth:
+  enabled: false
+  shared-secret: ""
+  header: Authorization
+  bearer-prefix: "Bearer "
+  ignore-paths: /error,/actuator/**
+
+jwt:
+  secret: ${JWT_SECRET:Gvq3qwTLtylD/thEZikRdVUU2c5dv1GW+ZpC3BJDwOLU+8f22qPhFA5YXnRalpMz92HD3YiCCFjhyLM0mYGn8A==}
+  expiration: 18000000
+
+logging:
+  file:
+    name: ${LOGGING_FILE_PATH:/app/logs}/app.log
+  level:
+    root: INFO
+    com.medical: INFO
+    org.springframework: INFO
+    org.hibernate: WARN
+
+# 健康检查端点
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized

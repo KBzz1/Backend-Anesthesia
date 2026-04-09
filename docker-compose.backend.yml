@@ -1,0 +1,77 @@
+name: anesthesia-backend
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: anesthesia-backend-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: anesthesia
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: medical310
+    expose:
+      - "5432"
+    volumes:
+      - anesthesia_backend_postgres_data:/var/lib/postgresql/data
+      - ./docker/initdb/00-enable-pgcrypto.sql:/docker-entrypoint-initdb.d/00-enable-pgcrypto.sql:ro
+      - ./sourcedata/anesthesia_portable_backup_20260403_181217/sql/complete_database_rebuild.sql:/docker-entrypoint-initdb.d/01-complete-database-rebuild.sql:ro
+      - ./backend/sql/create_timeseries_tables.sql:/docker-entrypoint-initdb.d/02-create-timeseries-tables.sql:ro
+      - ./sourcedata/anesthesia_portable_backup_20260403_181217/sql/super_patient_seed.sql:/docker-entrypoint-initdb.d/03-super-patient-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d anesthesia"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: anesthesia-backend-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    expose:
+      - "6379"
+    volumes:
+      - anesthesia_backend_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: anesthesia-backend-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 18080
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/anesthesia
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: medical310
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_DATABASE: 0
+      STOMP_CONSUMER_ENABLED: "false"
+      STOMP_SERVER_URL: ws://anesthesia-backend-app:18080/ws
+      DEVICE_BINDING_URL: http://anesthesia-backend-app:18080/device/binding/device/
+      LOGGING_FILE_PATH: /app/logs
+    ports:
+      - "18080:18080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:18080/areas/online >/dev/null || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  anesthesia_backend_postgres_data:
+    driver: local
+  anesthesia_backend_redis_data:
+    driver: local

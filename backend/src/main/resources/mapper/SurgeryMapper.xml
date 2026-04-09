@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.medical.mapper.SurgeryMapper">
+
+    <resultMap id="SurgeryResultMap" type="com.medical.pojo.Surgery">
+        <id property="surgeryId" column="treatment_information_id"/>
+        <result property="patientId" column="patient_id"/>
+        <result property="isEmergency" column="is_emergency"/>
+        <result property="isPaid" column="is_paid"/>
+        <result property="surgeryMethod" column="surgery_method"/>
+    </resultMap>
+
+    <select id="getRecord" parameterType="long" resultMap="SurgeryResultMap">
+        SELECT
+            treatment_information_id,
+            patient_id,
+            is_emergency,
+            is_paid,
+            surgery_method
+        FROM treatment_information
+        WHERE treatment_information_id = #{id}
+    </select>
+
+    <!-- 创建诊疗记录时同步写入前端提供的术式/麻醉方式 -->
+    <insert id="addRecord" parameterType="com.medical.pojo.Surgery">
+        <selectKey keyProperty="surgeryId" resultType="long" order="AFTER">
+            SELECT currval(pg_get_serial_sequence('treatment_information', 'treatment_information_id'))
+        </selectKey>
+        INSERT INTO treatment_information (
+            patient_id,
+            surgery_method,
+            other_surgery_method,
+            anesthesia_method
+        ) VALUES (
+            #{patientId},
+            #{surgeryMethod},
+            #{otherSurgeryMethod},
+            #{anesthesiaMethod}
+        );
+    </insert>
+
+    <update id="updateScheduleTime">
+        UPDATE treatment_information
+        SET appointment_request_time = #{appointmentRequestTime},
+            scheduled_surgery_time = #{scheduledSurgeryTime},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE treatment_information_id = #{surgeryId}
+    </update>
+
+    <update id="updateDeviceBindTime">
+        UPDATE treatment_information
+        SET device_bind_time = #{deviceBindTime},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE treatment_information_id = #{surgeryId}
+    </update>
+
+    <update id="updateSurgeryStartTime">
+        UPDATE treatment_information
+        SET surgery_start_time = #{surgeryStartTime},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE treatment_information_id = #{surgeryId}
+    </update>
+
+    <update id="updateSurgeryEndTime">
+        UPDATE treatment_information
+        SET surgery_end_time = #{surgeryEndTime},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE treatment_information_id = #{surgeryId}
+    </update>
+
+    <update id="updateRecoveryEndTime">
+        UPDATE treatment_information
+        SET recovery_end_time = #{recoveryEndTime},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE treatment_information_id = #{surgeryId}
+    </update>
+
+    <select id="existsBySurgeryId" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1
+            FROM treatment_information
+            WHERE treatment_information_id = #{id}
+        )
+    </select>
+
+</mapper>
