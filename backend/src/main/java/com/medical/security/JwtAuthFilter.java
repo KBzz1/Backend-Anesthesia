@@ -22,8 +22,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     // Paths that require JWT authentication
     private static final String[] PROTECTED_PATHS = {
         "/surgeryArea/anesthesiologist2",
-        "/surgeryArea/mySignature",
-        "/recovery"
+        "/surgeryArea/mySignature"
     };
 
     private final JwtTokenProvider jwtTokenProvider;

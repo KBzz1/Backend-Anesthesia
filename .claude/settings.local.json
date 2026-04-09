@@ -3,10 +3,14 @@
     "allow": [
       "Bash(docker exec anesthesia-backend-postgres:*)",
       "Bash(docker exec:*)",
-      "Bash(pip3 install:*)",
       "Bash(python3 -c \"import bcrypt; print\\(bcrypt.hashpw\\(b'test1234', bcrypt.gensalt\\(rounds=6\\)\\).decode\\(\\)\\)\")",
       "Bash(git add:*)",
-      "Bash(git commit -m ':*)"
+      "Bash(git commit -m ':*)",
+      "Bash(docker-compose down:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker-compose -f docker-compose.backend.yml down)",
+      "Bash(docker-compose -f docker-compose.backend.yml up -d --build)",
+      "Bash(curl:*)"
     ]
   }
 }

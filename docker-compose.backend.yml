@@ -9,14 +9,16 @@ services:
       POSTGRES_DB: anesthesia
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: medical310
-    expose:
-      - "5432"
+    ports:
+      - "5433:5432"
     volumes:
-      - anesthesia_backend_postgres_data:/var/lib/postgresql/data
+      - ./data/postgres:/var/lib/postgresql/data
       - ./docker/initdb/00-enable-pgcrypto.sql:/docker-entrypoint-initdb.d/00-enable-pgcrypto.sql:ro
       - ./sourcedata/anesthesia_portable_backup_20260403_181217/sql/complete_database_rebuild.sql:/docker-entrypoint-initdb.d/01-complete-database-rebuild.sql:ro
       - ./backend/sql/create_timeseries_tables.sql:/docker-entrypoint-initdb.d/02-create-timeseries-tables.sql:ro
       - ./sourcedata/anesthesia_portable_backup_20260403_181217/sql/super_patient_seed.sql:/docker-entrypoint-initdb.d/03-super-patient-seed.sql:ro
+      - ./docker/initdb/04-user-seed.sql:/docker-entrypoint-initdb.d/04-user-seed.sql:ro
+      - ./docker/initdb/signatures:/var/lib/postgresql/signatures:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d anesthesia"]
       interval: 10s
@@ -28,10 +30,10 @@ services:
     container_name: anesthesia-backend-redis
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
-    expose:
-      - "6379"
+    ports:
+      - "6380:6379"
     volumes:
-      - anesthesia_backend_redis_data:/data
+      - ./data/redis:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -69,9 +71,3 @@ services:
       interval: 20s
       timeout: 5s
       retries: 10
-
-volumes:
-  anesthesia_backend_postgres_data:
-    driver: local
-  anesthesia_backend_redis_data:
-    driver: local

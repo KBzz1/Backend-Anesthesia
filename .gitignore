@@ -9,6 +9,7 @@
 backend/target/
 
 # Data and logs
+data/
 sourcedata/
 *.log
 

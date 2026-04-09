@@ -22,18 +22,22 @@ public class RecoveryController {
     private RecoveryService recoveryService;
 
     @PostMapping
-    public Result create(@RequestAttribute("auth.staffId") Long tokenStaffId,
+    public Result create(@RequestAttribute(value = "auth.staffId", required = false) Long tokenStaffId,
                          @RequestBody Recovery recovery) {
-        recovery.setStaffId(tokenStaffId);
+        if (tokenStaffId != null) {
+            recovery.setStaffId(tokenStaffId);
+        }
         log.info("[recovery] 反序列化后对象: {}", recovery);
         Recovery saved = recoveryService.save(recovery);
         return Result.success(saved);
     }
 
     @PostMapping("/out")
-    public Result createAssessment(@RequestAttribute("auth.staffId") Long tokenStaffId,
+    public Result createAssessment(@RequestAttribute(value = "auth.staffId", required = false) Long tokenStaffId,
                                    @RequestBody Recovery recovery) {
-        recovery.setStaffId(tokenStaffId);
+        if (tokenStaffId != null) {
+            recovery.setStaffId(tokenStaffId);
+        }
         log.info("[recovery/out] 反序列化后对象: {}", recovery);
         Recovery saved = recoveryService.saveAssessment(recovery);
         return Result.success(saved);
