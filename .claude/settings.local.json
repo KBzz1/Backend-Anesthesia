@@ -1,4 +1,5 @@
 {
+  "language": "chinese",
   "permissions": {
     "allow": [
       "Bash(docker exec anesthesia-backend-postgres:*)",
@@ -10,7 +11,8 @@
       "Bash(docker-compose up:*)",
       "Bash(docker-compose -f docker-compose.backend.yml down)",
       "Bash(docker-compose -f docker-compose.backend.yml up -d --build)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Skill(create-command)"
     ]
   }
 }
