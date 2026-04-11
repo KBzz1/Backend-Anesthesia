@@ -24,9 +24,9 @@ model: haiku
 ---
 
 ### Step 2：委托设计
-信息不足 → 调用 `command-designer-agent`：
+信息不足 → 调用 `command-designer`：
 
-- subagent_type: `command-designer-agent`
+- subagent_type: `command-designer`
 - prompt: 结合用户需求与仓库结构，给出推荐结构、是否需要 skill / agent，并输出最小生成计划
 
 ---
