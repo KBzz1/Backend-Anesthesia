@@ -1,6 +1,5 @@
 package com.medical.service.impl;
 
-import com.medical.config.DashboardStompClient;
 import com.medical.pojo.Data;
 import com.medical.pojo.DTO.DeviceBindingDTO;
 import com.medical.service.DeviceBindingService;
@@ -16,15 +15,13 @@ class DataServiceImplTest {
 
     private SimpMessagingTemplate messagingTemplate;
     private DeviceBindingService deviceBindingService;
-    private DashboardStompClient dashboardStompClient;
     private DataServiceImpl dataService;
 
     @BeforeEach
     void setUp() {
         messagingTemplate = mock(SimpMessagingTemplate.class);
         deviceBindingService = mock(DeviceBindingService.class);
-        dashboardStompClient = mock(DashboardStompClient.class);
-        dataService = new DataServiceImpl(messagingTemplate, deviceBindingService, dashboardStompClient);
+        dataService = new DataServiceImpl(messagingTemplate, deviceBindingService);
     }
 
     @Test
@@ -47,6 +44,5 @@ class DataServiceImplTest {
                 org.mockito.ArgumentMatchers.<Object>argThat(payload ->
                         payload instanceof java.util.Map<?, ?> map && "15".equals(map.get("surgeryId")))
         );
-        verify(dashboardStompClient).sendToDashboard(data);
     }
 }
