@@ -8,6 +8,7 @@ import com.medical.utils.constants.PatientFlowRedisKeys;
 import com.medical.utils.constants.QueueConstants;
 import com.medical.utils.constants.StatusConstants;
 import com.medical.utils.constants.SuperPatientConstants;
+import com.medical.utils.constants.SuperPatientPolicy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,6 @@ public class QueueServiceImpl implements QueueService {
     private final SurgeryMapper surgeryMapper;
     private final PatientStatusService patientStatusService;
     private final StringRedisTemplate stringRedisTemplate;
-    private final Set<Long> missedIds = ConcurrentHashMap.newKeySet();
 
     public QueueServiceImpl(
             SurgeryMapper surgeryMapper,
@@ -96,15 +96,24 @@ public class QueueServiceImpl implements QueueService {
             return QueueConstants.UNEVALUATED;
         }
         int statusCode = patientStatus.getStatusCode();
+
+        Integer superResult = SuperPatientPolicy.registerAsSuperPatient(surgeryId, statusCode, patientStatusService);
+        if (superResult != null) {
+            // SuperPatient 已处理：若是从 MISSED 刚更新到 CHECKED_IN 返回成功，否则返回已签到
+            return superResult == StatusConstants.CHECKED_IN
+                    ? QueueConstants.REGISTER_SUCCESS
+                    : QueueConstants.REGISTERED;
+        }
+
         if (statusCode == StatusConstants.EVALUATED) {
             return QueueConstants.UNBOOKED;
-        } else if (statusCode >= StatusConstants.CHECKED_IN) {
+        } else if (statusCode >= StatusConstants.CHECKED_IN && statusCode != StatusConstants.MISSED) {
             return QueueConstants.REGISTERED;
         }
         patientStatusService.updatePatientStatus(
                 String.valueOf(surgeryId),
                 StatusConstants.CHECKED_IN,
-                !missedIds.contains(surgeryId)
+                true
         );
         return QueueConstants.REGISTER_SUCCESS;
     }
@@ -118,16 +127,8 @@ public class QueueServiceImpl implements QueueService {
         if (patientStatus.getStatusCode() != StatusConstants.CHECKED_IN) {
             throw new IllegalArgumentException("只有已签到状态的患者才能过号！当前状态: " + patientStatus.getStatusCode());
         }
-        patientStatusService.updatePatientStatus(String.valueOf(surgeryId), StatusConstants.APPOINTED, false);
-        missedIds.add(surgeryId);
-        log.info("患者过号: surgeryId={}, 已加入过号集合", surgeryId);
-    }
-
-    @Override
-    public void clearMissedID(Long surgeryId) {
-        if (missedIds.remove(surgeryId)) {
-            log.info("清除过号标记: surgeryId={}", surgeryId);
-        }
+        patientStatusService.updatePatientStatus(String.valueOf(surgeryId), StatusConstants.MISSED, false);
+        log.info("患者过号: surgeryId={}, 状态变更为过号", surgeryId);
     }
 
     @Override

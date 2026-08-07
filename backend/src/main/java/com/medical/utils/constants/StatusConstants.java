@@ -10,6 +10,7 @@ public final class StatusConstants {
     public static final int PREPARED = 6;
     public static final int IN_SURGERY = 7;
     public static final int IN_RECOVERY = 8;
+    public static final int MISSED = 9;
 
     private StatusConstants() {
     }

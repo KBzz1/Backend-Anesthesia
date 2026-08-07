@@ -5,8 +5,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.medical.pojo.Data;
+import com.medical.pojo.DTO.DeviceBindingDTO;
 import com.medical.service.DeviceBindingService;
 import com.medical.service.DataService;
 
@@ -18,13 +18,15 @@ public class DataServiceImpl implements DataService {
 
     private static final Logger log = LoggerFactory.getLogger(DataServiceImpl.class);
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private final SimpMessagingTemplate messagingTemplate;
     private final DeviceBindingService deviceBindingService;
     private final Map<String, Long> lowFreqLastSentTime = new ConcurrentHashMap<>();
     private static final long LOW_FREQ_INTERVAL_MS = 1000L;
 
-    public DataServiceImpl(SimpMessagingTemplate messagingTemplate, DeviceBindingService deviceBindingService) {
+    public DataServiceImpl(
+            SimpMessagingTemplate messagingTemplate,
+            DeviceBindingService deviceBindingService
+    ) {
         this.messagingTemplate = messagingTemplate;
         this.deviceBindingService = deviceBindingService;
     }
@@ -32,19 +34,16 @@ public class DataServiceImpl implements DataService {
     @Override
     public void publish(String deviceId, Data data) {
         try {
-            if (data.getHr() <= 0 || data.getTemp() <= 25 || data.getTemp() >= 45) {
-                log.warn("Ignoring abnormal data from device {}: {}", deviceId, data);
-                return;
-            }
-            String json = objectMapper.writeValueAsString(data);
-            String topic = String.format("device/%s", deviceId);
-            String surgeryId = deviceBindingService.getDevice(deviceId);
-            if (surgeryId != null && !surgeryId.isBlank()) {
-                data.setSurgeryId(surgeryId);
+            log.info("[RECV] deviceId={}, hr={}, bo={}, resp={}, temp={}, ecg={}, boWave={}, respWave={}, bp={}, surgeryId={}",
+                    deviceId, data.getHr(), data.getBo(), data.getResp(), data.getTemp(),
+                    data.getEcg(), data.getBoWave(), data.getRespWave(), data.getBp(), data.getSurgeryId());
+
+            DeviceBindingDTO bindingInfo = deviceBindingService.getPatient(deviceId);
+            if (bindingInfo != null && bindingInfo.getSurgeryId() != null && !bindingInfo.getSurgeryId().isBlank()) {
+                data.setSurgeryId(bindingInfo.getSurgeryId());
             }
             messagingTemplate.convertAndSend(String.format("/data/sub/%s", deviceId), data);
             pushLowFrequencyAggregate(deviceId, data);
-            log.info("Ready to publish -> {} : {}", topic, json);
         } catch (Exception e) {
             log.error("Failed to process data from device {}", deviceId, e);
         }
@@ -68,4 +67,3 @@ public class DataServiceImpl implements DataService {
         messagingTemplate.convertAndSend("/data/sub/all", lowFreqPayload);
     }
 }
-

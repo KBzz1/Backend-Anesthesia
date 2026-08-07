@@ -58,14 +58,10 @@ public class PatientStatusServiceImpl implements PatientStatusService {
         if (!surgeryMapper.existsBySurgeryId(surgeryIdLong)) {
             throw new IllegalArgumentException("手术ID不存在");
         }
-        if (newStatusCode == null || newStatusCode < StatusConstants.EVALUATED || newStatusCode > StatusConstants.IN_RECOVERY) {
-            throw new IllegalArgumentException("状态码必须在1-8之间");
+        if (newStatusCode == null || newStatusCode < StatusConstants.EVALUATED || newStatusCode > StatusConstants.MISSED) {
+            throw new IllegalArgumentException("状态码必须在" + StatusConstants.EVALUATED + "-" + StatusConstants.MISSED + "之间");
         }
         ensureSuperPatientInitialized(surgeryId);
-
-        if (newStatusCode == StatusConstants.IN_PREPARATION_AREA) {
-            queueService.clearMissedID(surgeryIdLong);
-        }
 
         String infoKey = PatientFlowRedisKeys.PATIENT_INFO_KEY + surgeryId;
         String newStatusKey = PatientFlowRedisKeys.PATIENT_STATE_KEY + newStatusCode;
@@ -86,7 +82,8 @@ public class PatientStatusServiceImpl implements PatientStatusService {
         }
 
         boolean allowBackwardTransition = SuperPatientConstants.isSuperPatient(surgeryIdLong)
-                || Objects.equals(oldStatusCode, StatusConstants.CHECKED_IN);
+                || Objects.equals(oldStatusCode, StatusConstants.CHECKED_IN)
+                || Objects.equals(oldStatusCode, StatusConstants.MISSED);
         if (oldStatusCode != null && !allowBackwardTransition && newStatusCode < oldStatusCode) {
             throw new IllegalArgumentException("状态回退操作！");
         }
@@ -207,7 +204,6 @@ public class PatientStatusServiceImpl implements PatientStatusService {
             stringRedisTemplate.delete(infoKey);
             if (SuperPatientConstants.isSuperPatient(surgeryId)) {
                 queueService.clearAppointmentState(SuperPatientConstants.SUPER_SURGERY_ID);
-                queueService.clearMissedID(SuperPatientConstants.SUPER_SURGERY_ID);
                 initializeSuperPatientState();
                 pushPatientsByStatus(StatusConstants.EVALUATED);
                 pushAllRegionStatistics();

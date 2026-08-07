@@ -14,8 +14,6 @@ public interface QueueService {
 
     void miss(Long surgeryId);
 
-    void clearMissedID(Long surgeryId);
-
     void syncAppointmentState(Long surgeryId, Integer newStatusCode);
 
     void clearAppointmentState(Long surgeryId);

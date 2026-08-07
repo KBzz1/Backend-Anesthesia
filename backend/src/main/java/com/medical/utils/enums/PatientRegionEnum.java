@@ -11,7 +11,7 @@ import java.util.List;
 public enum PatientRegionEnum {
 
     ASSESSMENT("评估区", List.of(1)),
-    WAITING("等待区", Arrays.asList(3, 4)),
+    WAITING("等待区", Arrays.asList(3, 4, 9)),
     PREPARATION("准备区", Arrays.asList(5, 6)),
     TREATMENT("诊疗区", List.of(7)),
     RECOVERY("恢复区", List.of(8));

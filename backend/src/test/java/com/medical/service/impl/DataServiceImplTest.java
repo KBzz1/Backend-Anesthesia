@@ -1,6 +1,8 @@
 package com.medical.service.impl;
 
+import com.medical.config.DashboardStompClient;
 import com.medical.pojo.Data;
+import com.medical.pojo.DTO.DeviceBindingDTO;
 import com.medical.service.DeviceBindingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,18 +16,22 @@ class DataServiceImplTest {
 
     private SimpMessagingTemplate messagingTemplate;
     private DeviceBindingService deviceBindingService;
+    private DashboardStompClient dashboardStompClient;
     private DataServiceImpl dataService;
 
     @BeforeEach
     void setUp() {
         messagingTemplate = mock(SimpMessagingTemplate.class);
         deviceBindingService = mock(DeviceBindingService.class);
-        dataService = new DataServiceImpl(messagingTemplate, deviceBindingService);
+        dashboardStompClient = mock(DashboardStompClient.class);
+        dataService = new DataServiceImpl(messagingTemplate, deviceBindingService, dashboardStompClient);
     }
 
     @Test
     void publishPushesDeviceAndAggregateStreams() {
-        when(deviceBindingService.getDevice("AA:BB")).thenReturn("15");
+        DeviceBindingDTO bindingDTO = new DeviceBindingDTO();
+        bindingDTO.setSurgeryId("15");
+        when(deviceBindingService.getPatient("AA:BB")).thenReturn(bindingDTO);
         Data data = new Data();
         data.setHr(70);
         data.setTemp(36.5f);
@@ -41,5 +47,6 @@ class DataServiceImplTest {
                 org.mockito.ArgumentMatchers.<Object>argThat(payload ->
                         payload instanceof java.util.Map<?, ?> map && "15".equals(map.get("surgeryId")))
         );
+        verify(dashboardStompClient).sendToDashboard(data);
     }
 }

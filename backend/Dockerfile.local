@@ -1,0 +1,26 @@
+# 临时本地构建文件：宿主机 mvnw 打包后，基于本地 jre 镜像制作运行时镜像
+# 用途：绕过 Docker Hub 拉取 maven 基础镜像的网络问题；内容同 Dockerfile 第二阶段
+FROM eclipse-temurin:21-jre
+
+WORKDIR /app
+
+RUN groupadd -g 1001 appgroup && \
+    useradd -u 1001 -g appgroup -m -s /usr/sbin/nologin appuser
+
+COPY target/*.jar app.jar
+
+RUN mkdir -p /app/logs && chown -R appuser:appgroup /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+
+USER appuser
+
+ENV SERVER_PORT=18080
+ENV SPRING_PROFILES_ACTIVE=docker
+
+EXPOSE 18080
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+    CMD curl -fsS http://127.0.0.1:${SERVER_PORT}/areas/online >/dev/null || exit 1
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

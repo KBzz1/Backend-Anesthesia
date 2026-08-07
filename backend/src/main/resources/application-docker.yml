@@ -49,6 +49,10 @@ jwt:
   secret: ${JWT_SECRET:Gvq3qwTLtylD/thEZikRdVUU2c5dv1GW+ZpC3BJDwOLU+8f22qPhFA5YXnRalpMz92HD3YiCCFjhyLM0mYGn8A==}
   expiration: 18000000
 
+dashboard:
+  stomp:
+    url: ${DASHBOARD_STOMP_URL:ws://host.docker.internal:8765/ws}
+
 logging:
   file:
     name: ${LOGGING_FILE_PATH:/app/logs}/app.log
